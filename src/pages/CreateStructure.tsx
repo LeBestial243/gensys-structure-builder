@@ -33,6 +33,8 @@ import { CheckCircle, Copy, Upload } from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from "uuid";
 
 // Form validation schema
 const formSchema = z.object({
@@ -106,20 +108,54 @@ const CreateStructure = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call to create structure
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Generate a unique ID for the structure
+      const structureId = uuidv4();
       
-      // Mock response - in a real app, this would come from your backend
-      const newStructureId = "struct_" + Math.random().toString(36).substring(2, 9);
+      // Upload logo to Supabase Storage
+      const fileExt = logoFile.name.split('.').pop();
+      const fileName = `${structureId}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('structures')
+        .upload(filePath, logoFile);
+        
+      if (uploadError) {
+        throw new Error(`Erreur d'upload: ${uploadError.message}`);
+      }
+      
+      // Get the public URL for the uploaded file
+      const { data: urlData } = supabase.storage
+        .from('structures')
+        .getPublicUrl(filePath);
+        
+      const logoUrl = urlData.publicUrl;
+      
+      // Create structure in the database
+      const { error: insertError } = await supabase
+        .from('structures')
+        .insert({
+          id: structureId,
+          name: data.name,
+          city: data.city,
+          type: data.type,
+          email: data.email,
+          max_users: data.maxUsers,
+          logo_url: logoUrl,
+        });
+        
+      if (insertError) {
+        throw new Error(`Erreur d'insertion: ${insertError.message}`);
+      }
       
       // Set created structure info
       setCreatedStructure({
-        id: newStructureId,
+        id: structureId,
         name: data.name,
       });
       
       // Generate invite link
-      const link = `https://gensys.app/inscription?structure_id=${newStructureId}`;
+      const link = `https://gensys.app/inscription?structure_id=${structureId}`;
       setInviteLink(link);
       
       toast({
@@ -127,12 +163,12 @@ const CreateStructure = () => {
         description: "Lien d'inscription généré",
       });
     } catch (error) {
+      console.error('Error creating structure:', error);
       toast({
         title: "Erreur",
-        description: "Un problème est survenu lors de la création de la structure",
+        description: error instanceof Error ? error.message : "Un problème est survenu lors de la création de la structure",
         variant: "destructive",
       });
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
