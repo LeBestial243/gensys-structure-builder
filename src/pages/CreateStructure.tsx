@@ -1,4 +1,3 @@
-
 import { useState, FormEvent, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -105,12 +104,10 @@ const CreateStructure = () => {
     try {
       const structureId = uuidv4();
       
-      // Ensure we're using PNG format for consistency
       const fileName = "logo.png";
       const filePath = `${structureId}/${fileName}`;
       
-      // Explicitly set the bucket_id to 'structures'
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('structures')
         .upload(filePath, logoFile, {
           cacheControl: '3600',
@@ -119,7 +116,6 @@ const CreateStructure = () => {
         });
         
       if (uploadError) {
-        console.error('Upload error:', uploadError);
         throw new Error(`Erreur d'upload: ${uploadError.message}`);
       }
       
@@ -142,7 +138,6 @@ const CreateStructure = () => {
         });
         
       if (insertError) {
-        console.error('Insert error:', insertError);
         throw new Error(`Erreur d'insertion: ${insertError.message}`);
       }
       
