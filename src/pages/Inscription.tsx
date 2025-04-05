@@ -164,7 +164,7 @@ const Inscription = () => {
     setIsSubmitting(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -172,26 +172,30 @@ const Inscription = () => {
             first_name: data.firstName,
             last_name: data.lastName,
             structure_id: structureId,
-            role: "educateur"
-          }
+          },
         },
       });
 
-      if (authError) {
-        console.error("Erreur d'inscription:", authError);
-        throw new Error(`Erreur d'inscription: ${authError.message}`);
+      if (error) {
+        console.error("❌ Erreur inscription :", error.message);
+        alert("Erreur : " + error.message);
+        return;
       }
 
-      if (authData?.user) {
-        console.log("Utilisateur créé:", authData.user);
-
-        toast({
-          title: "Inscription réussie",
-          description: "Votre compte a été créé avec succès. Vous allez être redirigé vers le tableau de bord.",
-        });
-
-        navigate("/dashboard");
+      if (!authData?.user) {
+        console.warn("❌ Aucun utilisateur créé !");
+        alert("L'inscription a échoué. Veuillez réessayer.");
+        return;
       }
+
+      console.log("✅ Utilisateur inscrit :", authData.user);
+
+      toast({
+        title: "Inscription réussie",
+        description: "Votre compte a été créé avec succès. Vous allez être redirigé vers le tableau de bord.",
+      });
+
+      navigate("/dashboard");
     } catch (error) {
       console.error("Erreur lors de l'inscription:", error);
       toast({
