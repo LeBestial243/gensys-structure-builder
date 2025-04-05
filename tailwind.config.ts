@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,25 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom colors inspired by Tesla and lavender/purple palette
+				lavender: {
+					50: '#f3f1ff',
+					100: '#e9e6ff',
+					200: '#d6d1fe',
+					300: '#b9b0fc',
+					400: '#9b87f5',
+					500: '#8b5cf6',
+					600: '#7e69ab',
+					700: '#6b4e9e',
+					800: '#5a4285',
+					900: '#4c3870',
+				},
+				tesla: {
+					gray: '#f4f4f4',
+					light: '#f8f8f8',
+					dark: '#222',
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
