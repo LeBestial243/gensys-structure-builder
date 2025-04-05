@@ -111,14 +111,38 @@ const CreateStructure = () => {
       // Generate a unique ID for the structure
       const structureId = uuidv4();
       
+      // First check if storage bucket exists, create it if not
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const structuresBucketExists = buckets?.some(bucket => bucket.name === 'structures');
+      
+      if (!structuresBucketExists) {
+        const { error: bucketError } = await supabase.storage.createBucket('structures', {
+          public: true
+        });
+        
+        if (bucketError) {
+          console.error('Error creating bucket:', bucketError);
+          toast({
+            title: "Erreur",
+            description: `Erreur lors de la création du bucket: ${bucketError.message}`,
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
       // Upload logo to Supabase Storage
       const fileExt = logoFile.name.split('.').pop();
       const fileName = `${structureId}.${fileExt}`;
-      const filePath = `logos/${fileName}`;
+      const filePath = `${fileName}`;
       
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('structures')
-        .upload(filePath, logoFile);
+        .upload(filePath, logoFile, {
+          cacheControl: '3600',
+          upsert: true
+        });
         
       if (uploadError) {
         throw new Error(`Erreur d'upload: ${uploadError.message}`);
