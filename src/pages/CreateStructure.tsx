@@ -1,4 +1,3 @@
-
 import { useState, FormEvent, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -103,17 +102,14 @@ const CreateStructure = () => {
     setIsSubmitting(true);
 
     try {
-      // Generate a unique ID for the structure
       const structureId = uuidv4();
       
-      // Prepare the file path for storage
       const fileExt = logoFile.name.split('.').pop();
       const fileName = `logo.${fileExt}`;
       const filePath = `${structureId}/${fileName}`;
       
       console.log("Téléchargement du logo vers:", filePath);
       
-      // Upload the logo file to Supabase Storage
       const { error: uploadError, data: uploadData } = await supabase.storage
         .from('structures')
         .upload(filePath, logoFile, {
@@ -129,7 +125,6 @@ const CreateStructure = () => {
       
       console.log("Téléchargement réussi:", uploadData);
       
-      // Get the public URL of the uploaded file
       const { data: urlData } = supabase.storage
         .from('structures')
         .getPublicUrl(filePath);
@@ -137,7 +132,6 @@ const CreateStructure = () => {
       const logoUrl = urlData.publicUrl;
       console.log("URL du logo:", logoUrl);
       
-      // Insert the new structure into the database
       console.log("Insertion de la structure avec les données:", {
         id: structureId,
         name: data.name,
@@ -167,14 +161,11 @@ const CreateStructure = () => {
       
       console.log("Structure créée avec succès avec l'ID:", structureId);
       
-      // Set success state
       setCreatedStructure({
         id: structureId,
         name: data.name,
       });
       
-      // Generate the invite link - Correction du lien pour qu'il fonctionne correctement
-      // Utiliser l'URL de base actuelle au lieu d'un domaine codé en dur
       const baseUrl = window.location.origin;
       const link = `${baseUrl}/inscription?structure_id=${structureId}`;
       setInviteLink(link);

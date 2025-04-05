@@ -8,8 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import CreateStructure from "./pages/CreateStructure";
-import Registration from "./pages/Registration"; 
-import Inscription from "./pages/Inscription"; // Import the new Inscription component
+import Inscription from "./pages/Inscription";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -35,7 +34,6 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/inscription" element={<Inscription />} />
-            <Route path="/registration" element={<Registration />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
