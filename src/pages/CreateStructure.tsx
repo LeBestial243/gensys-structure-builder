@@ -1,4 +1,3 @@
-
 import { useState, FormEvent, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -36,7 +35,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 
-// Form validation schema
 const formSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   city: z.string().min(2, "La ville doit contenir au moins 2 caractères"),
@@ -69,12 +67,10 @@ const CreateStructure = () => {
     },
   });
 
-  // Handle file selection
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       
-      // Check file type
       if (!file.type.match(/image\/(png|svg\+xml)/)) {
         toast({
           title: "Format invalide",
@@ -84,7 +80,6 @@ const CreateStructure = () => {
         return;
       }
       
-      // Set file and preview
       setLogoFile(file);
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -94,7 +89,6 @@ const CreateStructure = () => {
     }
   };
 
-  // Form submission handler
   const onSubmit = async (data: FormValues) => {
     if (!logoFile) {
       toast({
@@ -108,11 +102,8 @@ const CreateStructure = () => {
     setIsSubmitting(true);
 
     try {
-      // Generate a unique ID for the structure
       const structureId = uuidv4();
       
-      // Upload logo to Supabase Storage - assuming bucket exists
-      // Use PNG for all uploads to ensure consistency
       const fileName = "logo.png";
       const filePath = `${structureId}/${fileName}`;
       
@@ -128,14 +119,12 @@ const CreateStructure = () => {
         throw new Error(`Erreur d'upload: ${uploadError.message}`);
       }
       
-      // Get the public URL for the uploaded file
       const { data: urlData } = supabase.storage
         .from('structures')
         .getPublicUrl(filePath);
         
       const logoUrl = urlData.publicUrl;
       
-      // Create structure in the database
       const { error: insertError } = await supabase
         .from('structures')
         .insert({
@@ -152,13 +141,11 @@ const CreateStructure = () => {
         throw new Error(`Erreur d'insertion: ${insertError.message}`);
       }
       
-      // Set created structure info
       setCreatedStructure({
         id: structureId,
         name: data.name,
       });
       
-      // Generate invite link
       const link = `https://gensys.app/inscription?structure_id=${structureId}`;
       setInviteLink(link);
       
@@ -178,7 +165,6 @@ const CreateStructure = () => {
     }
   };
 
-  // Copy invite link to clipboard
   const copyInviteLink = () => {
     navigator.clipboard.writeText(inviteLink);
     toast({
