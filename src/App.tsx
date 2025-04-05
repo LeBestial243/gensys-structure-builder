@@ -8,7 +8,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import CreateStructure from "./pages/CreateStructure";
-import Registration from "./pages/Registration"; // Import the new Registration component
+import Registration from "./pages/Registration"; 
+import Inscription from "./pages/Inscription"; // Import the new Inscription component
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -33,8 +34,8 @@ const App = () => (
                 <CreateStructure />
               </ProtectedRoute>
             } />
-            {/* Route d'inscription avec le nouveau composant Registration */}
-            <Route path="/inscription" element={<Registration />} />
+            <Route path="/inscription" element={<Inscription />} />
+            <Route path="/registration" element={<Registration />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
