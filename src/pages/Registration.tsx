@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Card, 
@@ -58,9 +59,8 @@ type FormValues = z.infer<typeof formSchema>;
 const Registration = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { currentUser } = useAuth();
-  const structureId = searchParams.get("structure_id");
+  const [structureId, setStructureId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [structure, setStructure] = useState<StructureData>({
     id: "",
@@ -90,7 +90,10 @@ const Registration = () => {
       return;
     }
 
-    if (!structureId) {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("structure_id");
+
+    if (!id) {
       setStructure(prev => ({
         ...prev,
         loading: false,
@@ -99,12 +102,14 @@ const Registration = () => {
       return;
     }
 
+    setStructureId(id);
+
     const fetchStructure = async () => {
       try {
         const { data, error } = await supabase
           .from("structures")
           .select("*")
-          .eq("id", structureId)
+          .eq("id", id)
           .single();
 
         if (error) {
@@ -137,7 +142,7 @@ const Registration = () => {
     };
 
     fetchStructure();
-  }, [structureId, currentUser, navigate]);
+  }, [currentUser, navigate]);
 
   const onSubmit = async (data: FormValues) => {
     if (!structureId) {
