@@ -1,3 +1,4 @@
+
 import { useState, FormEvent, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -110,7 +111,7 @@ const CreateStructure = () => {
       const fileName = `logo.${fileExt}`;
       const filePath = `${structureId}/${fileName}`;
       
-      console.log("Uploading logo to:", filePath);
+      console.log("Téléchargement du logo vers:", filePath);
       
       // Upload the logo file to Supabase Storage
       const { error: uploadError, data: uploadData } = await supabase.storage
@@ -122,11 +123,11 @@ const CreateStructure = () => {
         });
         
       if (uploadError) {
-        console.error("Upload error:", uploadError);
-        throw new Error(`Erreur d'upload: ${uploadError.message}`);
+        console.error("Erreur de téléchargement:", uploadError);
+        throw new Error(`Erreur de téléchargement: ${uploadError.message}`);
       }
       
-      console.log("Upload successful:", uploadData);
+      console.log("Téléchargement réussi:", uploadData);
       
       // Get the public URL of the uploaded file
       const { data: urlData } = supabase.storage
@@ -134,10 +135,10 @@ const CreateStructure = () => {
         .getPublicUrl(filePath);
         
       const logoUrl = urlData.publicUrl;
-      console.log("Logo URL:", logoUrl);
+      console.log("URL du logo:", logoUrl);
       
       // Insert the new structure into the database
-      console.log("Inserting structure with data:", {
+      console.log("Insertion de la structure avec les données:", {
         id: structureId,
         name: data.name,
         city: data.city,
@@ -160,11 +161,11 @@ const CreateStructure = () => {
         });
         
       if (insertError) {
-        console.error("Insert error:", insertError);
+        console.error("Erreur d'insertion:", insertError);
         throw new Error(`Erreur d'insertion: ${insertError.message}`);
       }
       
-      console.log("Structure created successfully with ID:", structureId);
+      console.log("Structure créée avec succès avec l'ID:", structureId);
       
       // Set success state
       setCreatedStructure({
@@ -172,8 +173,10 @@ const CreateStructure = () => {
         name: data.name,
       });
       
-      // Generate the invite link
-      const link = `https://gensys.app/inscription?structure_id=${structureId}`;
+      // Generate the invite link - Correction du lien pour qu'il fonctionne correctement
+      // Utiliser l'URL de base actuelle au lieu d'un domaine codé en dur
+      const baseUrl = window.location.origin;
+      const link = `${baseUrl}/inscription?structure_id=${structureId}`;
       setInviteLink(link);
       
       toast({
@@ -181,7 +184,7 @@ const CreateStructure = () => {
         description: "Lien d'inscription généré",
       });
     } catch (error) {
-      console.error('Error creating structure:', error);
+      console.error('Erreur lors de la création de la structure:', error);
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Un problème est survenu lors de la création de la structure",

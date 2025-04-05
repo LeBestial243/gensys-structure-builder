@@ -32,6 +32,8 @@ const App = () => (
                 <CreateStructure />
               </ProtectedRoute>
             } />
+            {/* Ajout de la route d'inscription */}
+            <Route path="/inscription" element={<NotFound />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
