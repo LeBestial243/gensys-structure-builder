@@ -166,6 +166,9 @@ const Registration = () => {
             last_name: data.lastName,
             structure_id: structureId,
           },
+          meta: {
+            role: "educateur"
+          }
         },
       });
 
@@ -175,12 +178,12 @@ const Registration = () => {
       }
 
       if (authData?.user) {
-        // Since there's no profiles table, we don't need to create a profile
-        // Just log the successful registration
+        // Log user for debugging
+        console.log("Utilisateur créé:", authData.user);
 
         toast({
           title: "Inscription réussie",
-          description: "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
+          description: "Votre compte a été créé avec succès. Vous allez être redirigé vers le tableau de bord.",
         });
 
         // Redirect to dashboard after successful registration
@@ -190,7 +193,9 @@ const Registration = () => {
       console.error("Erreur lors de l'inscription:", error);
       toast({
         title: "Erreur",
-        description: error instanceof Error ? error.message : "Une erreur s'est produite lors de l'inscription",
+        description: error instanceof Error 
+          ? error.message 
+          : "Une erreur s'est produite lors de l'inscription",
         variant: "destructive",
       });
     } finally {
@@ -231,7 +236,7 @@ const Registration = () => {
   }
 
   return (
-    <div className="container mx-auto py-10 px-4 sm:px-6">
+    <div className="container mx-auto py-10 px-4 sm:px-6 min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6">
           {structure.logo_url && (
@@ -249,14 +254,14 @@ const Registration = () => {
           </p>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Créer votre compte</CardTitle>
+        <Card className="border-opacity-50 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-lavender-50 rounded-t-lg">
+            <CardTitle className="text-lavender-800">Créer votre compte</CardTitle>
             <CardDescription>
               Remplissez le formulaire ci-dessous pour rejoindre {structure.name}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -338,7 +343,7 @@ const Registration = () => {
                   control={form.control}
                   name="acceptTerms"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 border">
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 border border-lavender-200 bg-lavender-50">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
@@ -357,7 +362,7 @@ const Registration = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full"
+                  className="w-full bg-lavender-500 hover:bg-lavender-600"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Inscription en cours..." : "S'inscrire"}
@@ -368,7 +373,7 @@ const Registration = () => {
           <CardFooter className="flex justify-center border-t pt-6">
             <div className="text-sm text-gray-600">
               Vous avez déjà un compte?{" "}
-              <a href="/" className="text-blue-600 hover:underline">
+              <a href="/" className="text-lavender-600 hover:underline">
                 Se connecter
               </a>
             </div>
