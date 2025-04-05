@@ -172,19 +172,28 @@ const Inscription = () => {
             first_name: data.firstName,
             last_name: data.lastName,
             structure_id: structureId,
+            role: "educateur"
           },
         },
       });
 
       if (error) {
         console.error("❌ Erreur inscription :", error.message);
-        alert("Erreur : " + error.message);
+        toast({
+          title: "Erreur d'inscription",
+          description: error.message,
+          variant: "destructive",
+        });
         return;
       }
 
       if (!authData?.user) {
         console.warn("❌ Aucun utilisateur créé !");
-        alert("L'inscription a échoué. Veuillez réessayer.");
+        toast({
+          title: "Inscription échouée",
+          description: "L'inscription a échoué. Veuillez réessayer.",
+          variant: "destructive",
+        });
         return;
       }
 
