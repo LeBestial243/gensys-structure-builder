@@ -62,7 +62,7 @@ type StructureData = {
 const Inscription = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const [structureId, setStructureId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [structure, setStructure] = useState<StructureData>({
@@ -88,12 +88,21 @@ const Inscription = () => {
     },
   });
 
-  // Redirect if already logged in
+  // If a user is already logged in, offer them the choice to logout or go to dashboard
   useEffect(() => {
-    if (currentUser) {
-      navigate("/dashboard");
-    }
-  }, [currentUser, navigate]);
+    const handleExistingUser = async () => {
+      if (currentUser) {
+        // Show toast with option to logout
+        toast({
+          title: "Déjà connecté",
+          description: "Vous êtes déjà connecté. Vous avez été redirigé vers le tableau de bord.",
+        });
+        navigate("/dashboard");
+      }
+    };
+    
+    handleExistingUser();
+  }, [currentUser, navigate, toast, logout]);
 
   // Get structure_id from URL and fetch structure data
   useEffect(() => {
