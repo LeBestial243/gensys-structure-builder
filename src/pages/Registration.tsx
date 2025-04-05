@@ -175,22 +175,8 @@ const Registration = () => {
       }
 
       if (authData?.user) {
-        // Create user profile in the database
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .insert({
-            id: authData.user.id,
-            first_name: data.firstName,
-            last_name: data.lastName,
-            email: data.email,
-            structure_id: structureId,
-            role: "user",
-          });
-
-        if (profileError) {
-          console.error("Erreur de création de profil:", profileError);
-          throw new Error(`Erreur de création de profil: ${profileError.message}`);
-        }
+        // Since there's no profiles table, we don't need to create a profile
+        // Just log the successful registration
 
         toast({
           title: "Inscription réussie",
