@@ -71,10 +71,10 @@ const CreateStructure = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       
-      if (!file.type.match(/image\/(png|svg\+xml)/)) {
+      if (!file.type.match(/image\/(png|jpeg|jpg|svg\+xml)/)) {
         toast({
           title: "Format invalide",
-          description: "Veuillez télécharger un fichier PNG ou SVG",
+          description: "Veuillez télécharger un fichier PNG, JPG ou SVG",
           variant: "destructive",
         });
         return;
@@ -102,28 +102,50 @@ const CreateStructure = () => {
     setIsSubmitting(true);
 
     try {
+      // Generate a unique ID for the structure
       const structureId = uuidv4();
       
-      const fileName = "logo.png";
+      // Prepare the file path for storage
+      const fileExt = logoFile.name.split('.').pop();
+      const fileName = `logo.${fileExt}`;
       const filePath = `${structureId}/${fileName}`;
       
+      console.log("Uploading logo to:", filePath);
+      
+      // Upload the logo file to Supabase Storage
       const { error: uploadError, data: uploadData } = await supabase.storage
         .from('structures')
         .upload(filePath, logoFile, {
           cacheControl: '3600',
           upsert: true,
-          contentType: 'image/png'
+          contentType: logoFile.type
         });
         
       if (uploadError) {
+        console.error("Upload error:", uploadError);
         throw new Error(`Erreur d'upload: ${uploadError.message}`);
       }
       
+      console.log("Upload successful:", uploadData);
+      
+      // Get the public URL of the uploaded file
       const { data: urlData } = supabase.storage
         .from('structures')
         .getPublicUrl(filePath);
         
       const logoUrl = urlData.publicUrl;
+      console.log("Logo URL:", logoUrl);
+      
+      // Insert the new structure into the database
+      console.log("Inserting structure with data:", {
+        id: structureId,
+        name: data.name,
+        city: data.city,
+        type: data.type,
+        email: data.email,
+        max_users: data.maxUsers,
+        logo_url: logoUrl,
+      });
       
       const { error: insertError } = await supabase
         .from('structures')
@@ -138,14 +160,19 @@ const CreateStructure = () => {
         });
         
       if (insertError) {
+        console.error("Insert error:", insertError);
         throw new Error(`Erreur d'insertion: ${insertError.message}`);
       }
       
+      console.log("Structure created successfully with ID:", structureId);
+      
+      // Set success state
       setCreatedStructure({
         id: structureId,
         name: data.name,
       });
       
+      // Generate the invite link
       const link = `https://gensys.app/inscription?structure_id=${structureId}`;
       setInviteLink(link);
       
@@ -342,19 +369,19 @@ const CreateStructure = () => {
                         ) : (
                           <div className="flex flex-col items-center justify-center py-2">
                             <Upload className="w-10 h-10 text-gray-400" />
-                            <p className="text-xs text-gray-500 mt-1">SVG ou PNG</p>
+                            <p className="text-xs text-gray-500 mt-1">SVG, PNG, JPG</p>
                           </div>
                         )}
                         <input 
                           type="file" 
                           className="hidden" 
-                          accept=".svg,.png" 
+                          accept=".svg,.png,.jpg,.jpeg" 
                           onChange={handleFileChange}
                         />
                       </label>
                       
                       <div className="text-sm text-gray-500">
-                        <p>Formats acceptés: SVG, PNG</p>
+                        <p>Formats acceptés: SVG, PNG, JPG</p>
                         <p>Fond transparent recommandé</p>
                         {logoFile && (
                           <p className="text-green-600 font-medium mt-1">
