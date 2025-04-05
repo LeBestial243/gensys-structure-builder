@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -86,13 +85,11 @@ const Registration = () => {
   });
 
   useEffect(() => {
-    // Redirect if the user is already logged in
     if (currentUser) {
       navigate("/dashboard");
       return;
     }
 
-    // Verify the structure ID is provided
     if (!structureId) {
       setStructure(prev => ({
         ...prev,
@@ -102,7 +99,6 @@ const Registration = () => {
       return;
     }
 
-    // Fetch structure information
     const fetchStructure = async () => {
       try {
         const { data, error } = await supabase
@@ -156,7 +152,6 @@ const Registration = () => {
     setIsSubmitting(true);
 
     try {
-      // Register user in Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -165,8 +160,6 @@ const Registration = () => {
             first_name: data.firstName,
             last_name: data.lastName,
             structure_id: structureId,
-          },
-          meta: {
             role: "educateur"
           }
         },
@@ -178,7 +171,6 @@ const Registration = () => {
       }
 
       if (authData?.user) {
-        // Log user for debugging
         console.log("Utilisateur créé:", authData.user);
 
         toast({
@@ -186,7 +178,6 @@ const Registration = () => {
           description: "Votre compte a été créé avec succès. Vous allez être redirigé vers le tableau de bord.",
         });
 
-        // Redirect to dashboard after successful registration
         navigate("/dashboard");
       }
     } catch (error) {
@@ -203,7 +194,6 @@ const Registration = () => {
     }
   };
 
-  // If loading, show a loading skeleton
   if (structure.loading) {
     return (
       <div className="container mx-auto py-10 px-4 sm:px-6">
@@ -215,7 +205,6 @@ const Registration = () => {
     );
   }
 
-  // If there's an error, show an error message
   if (structure.error) {
     return (
       <div className="container mx-auto py-10 px-4 sm:px-6">
