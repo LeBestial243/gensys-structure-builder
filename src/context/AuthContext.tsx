@@ -38,7 +38,8 @@ const MOCK_USER: User = {
   id: "1",
   email: "admin@gensys.app",
   role: "super_admin",
-  name: "Admin User"
+  name: "Admin User",
+  structure_id: "123e4567-e89b-12d3-a456-426614174000" // UUID fictif pour développement
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {

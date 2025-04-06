@@ -146,6 +146,12 @@ const MesJeunes = () => {
     setFilteredJeunes(filtered);
   }, [searchQuery, jeunes, activeFilters]);
 
+  // Vérifier si une chaîne est un UUID valide
+  const isValidUUID = (uuid: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  };
+
   // Gérer la soumission du formulaire de nouveau jeune
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,6 +170,13 @@ const MesJeunes = () => {
     if (!structureId) {
       console.error("ID de structure manquant");
       alert("Veuillez sélectionner ou saisir une structure");
+      return;
+    }
+    
+    // Vérifier que la structure ID est un UUID valide
+    if (!isValidUUID(structureId)) {
+      console.error("ID de structure invalide, pas au format UUID");
+      alert("L'ID de structure doit être au format UUID (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)");
       return;
     }
     
@@ -602,16 +615,20 @@ const MesJeunes = () => {
                   <Input
                     id="structure_id_manual"
                     name="structure_id_manual"
-                    placeholder="ID de structure (format UUID)"
+                    placeholder="ID de structure (format UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)"
                     value={newJeune.structure_id !== currentUser?.structure_id ? newJeune.structure_id : ""}
                     onChange={(e) => {
                       console.log("Valeur saisie:", e.target.value);
                       setNewJeune(prev => ({ ...prev, structure_id: e.target.value }));
                     }}
                   />
+                  <p className="text-xs text-red-500 mt-1">
+                    L'ID doit être un UUID valide (ex: 123e4567-e89b-12d3-a456-426614174000)
+                  </p>
                 </div>
                 <p className="text-xs text-gray-500 italic mt-1">
-                  Pour les éducateurs qui travaillent dans plusieurs structures
+                  Pour les éducateurs qui travaillent dans plusieurs structures.
+                  Si vous voulez utiliser la structure MECS, SISEIP ou ITEP, vous devez d'abord trouver son UUID.
                 </p>
               </div>
             </div>
