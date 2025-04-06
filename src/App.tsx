@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import CreateStructure from "./pages/CreateStructure";
 import Inscription from "./pages/Inscription";
 import Educateurs from "./pages/Educateurs";
+import MesJeunes from "./pages/MesJeunes";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -37,6 +38,11 @@ const App = () => (
             <Route path="/educateurs" element={
               <ProtectedRoute>
                 <Educateurs />
+              </ProtectedRoute>
+            } />
+            <Route path="/mes-jeunes" element={
+              <ProtectedRoute>
+                <MesJeunes />
               </ProtectedRoute>
             } />
             <Route path="/inscription" element={<Inscription />} />
