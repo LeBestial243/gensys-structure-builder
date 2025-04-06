@@ -10,19 +10,28 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ 
   children, 
-  requiredRole = "user", 
-  redirectTo = "/dashboard" 
+  requiredRole, 
+  redirectTo = "/" 
 }: ProtectedRouteProps) => {
   const { currentUser, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading && (!currentUser || (requiredRole && currentUser.role !== requiredRole))) {
+    // Si le chargement est terminé et que l'utilisateur n'est pas connecté,
+    // rediriger vers la page d'accueil
+    if (!isLoading && !currentUser) {
+      navigate("/");
+      return;
+    }
+
+    // Si un rôle spécifique est requis et que l'utilisateur n'a pas ce rôle,
+    // rediriger vers la page spécifiée (par défaut: dashboard)
+    if (!isLoading && currentUser && requiredRole && currentUser.role !== requiredRole) {
       navigate(redirectTo);
     }
   }, [currentUser, isLoading, navigate, redirectTo, requiredRole]);
 
-  // Show loading state while checking auth
+  // Afficher l'état de chargement pendant la vérification de l'authentification
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -31,12 +40,17 @@ const ProtectedRoute = ({
     );
   }
 
-  // If user doesn't have the required role, we'll redirect (handled in useEffect)
-  if (requiredRole && currentUser?.role !== requiredRole) {
+  // Si l'utilisateur n'est pas connecté, ne rien afficher (redirection gérée dans useEffect)
+  if (!currentUser) {
     return null;
   }
 
-  // Otherwise, render children
+  // Si un rôle spécifique est requis et que l'utilisateur n'a pas ce rôle, ne rien afficher
+  if (requiredRole && currentUser.role !== requiredRole) {
+    return null;
+  }
+
+  // Sinon, afficher les enfants
   return <>{children}</>;
 };
 
