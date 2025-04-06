@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { JeuneService } from "@/services/JeuneService";
 import { Jeune } from "@/types/dashboard";
+// Import date-fns
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr } from "date-fns/locale/fr";
 
 // Icônes
 import { 
