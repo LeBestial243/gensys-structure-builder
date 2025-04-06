@@ -229,4 +229,44 @@ export class JeuneService {
       return false;
     }
   }
+
+  /**
+   * Crée un nouveau jeune
+   * @param jeune Données du jeune à créer
+   * @returns Le jeune créé ou null en cas d'erreur
+   */
+  static async createJeune(jeune: {
+    prenom: string;
+    nom: string;
+    date_naissance: string;
+    structure_id: string;
+    dossiers?: string[];
+  }): Promise<Jeune | null> {
+    try {
+      const { data, error } = await supabase
+        .from('jeunes')
+        .insert({
+          prenom: jeune.prenom,
+          nom: jeune.nom,
+          date_naissance: jeune.date_naissance,
+          structure_id: jeune.structure_id,
+          dossier_complet: false
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erreur lors de la création du jeune:', error);
+        return null;
+      }
+
+      // Logique pour créer les dossiers associés au jeune
+      // À implémenter selon la structure de la base de données
+
+      return data as Jeune;
+    } catch (error) {
+      console.error('Erreur service jeunes:', error);
+      return null;
+    }
+  }
 }

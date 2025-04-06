@@ -152,12 +152,18 @@ const MesJeunes = () => {
     try {
       setIsLoading(true);
       
-      // Ici, nous utiliserions la vraie requête Supabase pour créer un jeune
-      // Pour l'instant, simulation d'un appel API
-      console.log("Création d'un nouveau jeune:", newJeune);
+      // Créer le nouveau jeune en utilisant l'API
+      const nouveauJeune = await JeuneService.createJeune({
+        prenom: newJeune.prenom,
+        nom: newJeune.nom,
+        date_naissance: newJeune.date_naissance,
+        structure_id: currentUser.structure_id,
+        dossiers: newJeune.dossiers
+      });
       
-      // TODO: Implémenter l'appel réel à l'API via JeuneService
-      // const nouveauJeune = await JeuneService.createJeune(newJeune);
+      if (nouveauJeune) {
+        console.log("Jeune créé avec succès:", nouveauJeune);
+      }
       
       // Fermer le modal
       setShowAddModal(false);
@@ -244,12 +250,10 @@ const MesJeunes = () => {
             Filtres
           </Button>
           
-          <DialogTrigger asChild onClick={() => setShowAddModal(true)}>
-            <Button className="gap-2">
-              <PlusCircle size={16} />
-              Ajouter un jeune
-            </Button>
-          </DialogTrigger>
+          <Button className="gap-2" onClick={() => setShowAddModal(true)}>
+            <PlusCircle size={16} />
+            Ajouter un jeune
+          </Button>
         </div>
       </div>
 
@@ -400,6 +404,7 @@ const MesJeunes = () => {
       
       {/* Modal d'ajout d'un jeune */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogTrigger className="hidden" />
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Ajouter un nouveau jeune</DialogTitle>
