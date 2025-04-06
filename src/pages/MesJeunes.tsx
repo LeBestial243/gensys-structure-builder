@@ -149,23 +149,31 @@ const MesJeunes = () => {
   // Gérer la soumission du formulaire de nouveau jeune
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Soumission du formulaire");
     
-    if (!newJeune.structure_id) {
+    // Vérifier la structure_id - utiliser la structure de l'utilisateur si aucune n'est spécifiée
+    const structureId = newJeune.structure_id || currentUser?.structure_id;
+    
+    if (!structureId) {
       console.error("ID de structure manquant");
+      alert("Veuillez sélectionner ou saisir une structure");
       return;
     }
 
     try {
       setIsLoading(true);
       
-      console.log("Données du formulaire:", newJeune);
+      console.log("Données du formulaire:", {
+        ...newJeune,
+        structure_id: structureId
+      });
       
       // Créer le nouveau jeune en utilisant l'API
       const nouveauJeune = await JeuneService.createJeune({
         prenom: newJeune.prenom,
         nom: newJeune.nom,
         date_naissance: newJeune.date_naissance,
-        structure_id: newJeune.structure_id,
+        structure_id: structureId,
         dossiers: newJeune.dossiers
       });
       
@@ -204,6 +212,7 @@ const MesJeunes = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewJeune(prev => ({ ...prev, [name]: value }));
+    console.log(`Champ ${name} mis à jour:`, value);
   };
 
   // Gérer l'upload de photo
@@ -556,22 +565,35 @@ const MesJeunes = () => {
               {/* Sélection de la structure */}
               <div className="space-y-2">
                 <label htmlFor="structure_id" className="text-sm font-medium">Structure</label>
-                <Select
-                  value={newJeune.structure_id}
-                  onValueChange={(value) => setNewJeune(prev => ({ ...prev, structure_id: value }))}
-                >
-                  <SelectTrigger id="structure_id">
-                    <SelectValue placeholder="Sélectionner une structure" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currentUser?.structure_id && (
-                      <SelectItem value={currentUser.structure_id}>
-                        Structure actuelle
-                      </SelectItem>
-                    )}
-                    {/* Ici, vous pourriez ajouter d'autres structures si l'utilisateur a des permissions */}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Select
+                      value={newJeune.structure_id}
+                      onValueChange={(value) => setNewJeune(prev => ({ ...prev, structure_id: value }))}
+                    >
+                      <SelectTrigger id="structure_id">
+                        <SelectValue placeholder="Sélectionner une structure" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {currentUser?.structure_id && (
+                          <SelectItem value={currentUser.structure_id}>
+                            Structure actuelle
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Ou saisir ID de structure manuellement"
+                      value={newJeune.structure_id !== currentUser?.structure_id ? newJeune.structure_id : ""}
+                      onChange={(e) => setNewJeune(prev => ({ ...prev, structure_id: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 italic">
+                  Utilisez l'ID de structure actuelle ou saisissez un ID manuellement
+                </p>
               </div>
             </div>
             
@@ -579,7 +601,18 @@ const MesJeunes = () => {
               <DialogClose asChild>
                 <Button type="button" variant="outline">Annuler</Button>
               </DialogClose>
-              <Button type="submit" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                disabled={isLoading}
+                onClick={(e) => {
+                  console.log("Bouton cliqué");
+                  if (!newJeune.prenom || !newJeune.nom || !newJeune.date_naissance) {
+                    e.preventDefault();
+                    alert("Veuillez remplir tous les champs obligatoires");
+                    return;
+                  }
+                }}
+              >
                 {isLoading ? (
                   <>
                     <div className="animate-spin mr-2 h-4 w-4 border-t-2 border-b-2 border-current rounded-full"></div>

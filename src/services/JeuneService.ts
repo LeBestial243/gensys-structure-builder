@@ -243,26 +243,36 @@ export class JeuneService {
     dossiers?: string[];
   }): Promise<Jeune | null> {
     try {
+      console.log("Début de création du jeune avec données:", jeune);
+      
       // On stocke les dossiers dans la base de données
       const dossiersJson = jeune.dossiers ? JSON.stringify(jeune.dossiers) : null;
       
+      // Créer un objet jeune pour l'insertion
+      const jeuneData = {
+        prenom: jeune.prenom,
+        nom: jeune.nom,
+        date_naissance: jeune.date_naissance,
+        structure_id: jeune.structure_id,
+        dossier_complet: false,
+        dossiers: dossiersJson  // Stocker les dossiers en tant que JSON
+      };
+      
+      console.log("Données à insérer:", jeuneData);
+      
       const { data, error } = await supabase
         .from('jeunes')
-        .insert({
-          prenom: jeune.prenom,
-          nom: jeune.nom,
-          date_naissance: jeune.date_naissance,
-          structure_id: jeune.structure_id,
-          dossier_complet: false,
-          dossiers: dossiersJson  // Stocker les dossiers en tant que JSON
-        })
+        .insert(jeuneData)
         .select()
         .single();
 
       if (error) {
         console.error('Erreur lors de la création du jeune:', error);
+        alert(`Erreur lors de la création: ${error.message}`);
         return null;
       }
+      
+      console.log("Jeune créé avec succès:", data);
       
       return data as Jeune;
     } catch (error) {
