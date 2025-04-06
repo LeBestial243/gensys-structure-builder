@@ -22,7 +22,8 @@ export default defineConfig(({ mode }) => {
             // In development, use specific configuration
             host: "localhost",
             port: 8080,
-            overlay: false
+            overlay: false,
+            clientPort: null // Force client to use the same port
           }
     },
     plugins: [
@@ -39,7 +40,7 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || "https://euwulgurffyxhazhirqh.supabase.co"),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1d3VsZ3VyZmZ5eGhhemhpcnFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4Mjc5ODcsImV4cCI6MjA1OTQwMzk4N30.Nz8VanS1hR1YrOSqen0wFqVeGPGsIEhR3jZt_b0VhVA"),
-      // Add this to handle the WebSocket token issue
+      // Handle WebSocket token issue
       '__WS_TOKEN__': JSON.stringify('dummy-token-for-build')
     }
   };

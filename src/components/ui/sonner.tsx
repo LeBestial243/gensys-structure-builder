@@ -3,14 +3,9 @@ import { Toaster as Sonner } from "sonner"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
-const Toaster = ({ ...props }: ToasterProps) => {
-  // Instead of using next-themes, we'll default to system or light theme
-  // This is a simpler approach that doesn't require the next-themes package
-  const theme = "system"
-
+function Toaster({ ...props }: ToasterProps) {
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
       className="toaster group"
       toastOptions={{
         classNames: {

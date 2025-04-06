@@ -12,8 +12,16 @@ import Inscription from "./pages/Inscription";
 import Educateurs from "./pages/Educateurs";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
+import { Suspense } from "react";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -21,28 +29,34 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/creer-structure" element={
-              <ProtectedRoute requiredRole="super_admin" redirectTo="/dashboard">
-                <CreateStructure />
-              </ProtectedRoute>
-            } />
-            <Route path="/educateurs" element={
-              <ProtectedRoute>
-                <Educateurs />
-              </ProtectedRoute>
-            } />
-            <Route path="/inscription" element={<Inscription />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+          </div>
+        }>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/creer-structure" element={
+                <ProtectedRoute requiredRole="super_admin" redirectTo="/dashboard">
+                  <CreateStructure />
+                </ProtectedRoute>
+              } />
+              <Route path="/educateurs" element={
+                <ProtectedRoute>
+                  <Educateurs />
+                </ProtectedRoute>
+              } />
+              <Route path="/inscription" element={<Inscription />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </Suspense>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
