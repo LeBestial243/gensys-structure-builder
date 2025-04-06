@@ -14,6 +14,12 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
+      hmr: {
+        // Add a fallback for WebSocket connections
+        clientPort: null,
+        // Explicitly disable overlay to prevent WS token issues
+        overlay: false
+      }
     },
     plugins: [
       react(),
