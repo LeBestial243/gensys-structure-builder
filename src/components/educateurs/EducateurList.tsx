@@ -3,8 +3,10 @@ import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { Educateur } from "@/types/educateurs";
+import { Search, Mail, CalendarClock, Shield, User2 } from "lucide-react";
+import { Educateur, EducateurRole } from "@/types/educateurs";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 interface EducateurListProps {
   educateurs: Educateur[];
@@ -14,6 +16,10 @@ interface EducateurListProps {
 
 const EducateurList = ({ educateurs, isLoading, error }: EducateurListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { currentUser } = useAuth();
+  
+  // Vérifier si l'utilisateur actuel peut modifier les rôles
+  const canManageEducateurs = currentUser?.role === "admin" || currentUser?.role === "super_admin";
 
   const filteredEducateurs = educateurs.filter(
     (educateur) =>
@@ -25,7 +31,7 @@ const EducateurList = ({ educateurs, isLoading, error }: EducateurListProps) => 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-lavender-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
       </div>
     );
   }
@@ -62,17 +68,44 @@ const EducateurList = ({ educateurs, isLoading, error }: EducateurListProps) => 
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredEducateurs.map((educateur) => (
-            <Card key={educateur.id} className="hover:shadow-md transition-shadow">
+            <Card key={educateur.id} className="hover:shadow-md transition-shadow border-t-2 border-t-purple-200">
               <CardHeader className="pb-2">
-                <CardTitle className="text-xl">
-                  {educateur.prenom} {educateur.nom}
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <User2 className="h-5 w-5 text-purple-500" />
+                  <span>
+                    {educateur.prenom} {educateur.nom}
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 mb-2">{educateur.email}</p>
-                <Badge className="bg-lavender-100 text-lavender-800 hover:bg-lavender-200">
-                  {educateur.role}
-                </Badge>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-gray-600 text-sm">
+                    <Mail className="h-4 w-4 text-gray-400" />
+                    <span>{educateur.email}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-gray-600 text-sm">
+                    <CalendarClock className="h-4 w-4 text-gray-400" />
+                    <span>Inscrit le {new Date(educateur.created_at).toLocaleDateString()}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-2">
+                    <Badge variant="outline" className={`
+                      ${educateur.role === 'super_admin' ? 'bg-red-100 text-red-800 hover:bg-red-200' : 
+                        educateur.role === 'admin' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' :
+                        'bg-purple-100 text-purple-800 hover:bg-purple-200'}
+                    `}>
+                      <Shield className="h-3 w-3 mr-1" />
+                      {educateur.role}
+                    </Badge>
+                    
+                    {canManageEducateurs && educateur.id !== currentUser?.id && (
+                      <Button variant="ghost" size="sm" className="text-xs">
+                        Gérer
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           ))}

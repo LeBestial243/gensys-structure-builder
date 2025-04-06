@@ -3,9 +3,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { StructureService } from "@/services/StructureService";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Users, Lock, AtSign, User, Shield, Building } from "lucide-react";
 
 // UI Components
 import { 
@@ -33,11 +35,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 // Validation schema
 const formSchema = z.object({
-  firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
-  lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
-  email: z.string().email("Adresse email invalide"),
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
-  confirmPassword: z.string().min(8, "La confirmation du mot de passe doit contenir au moins 8 caractères"),
+  firstName: z.string()
+    .min(2, "Le prénom doit contenir au moins 2 caractères")
+    .max(50, "Le prénom ne peut pas dépasser 50 caractères")
+    .refine(name => /^[a-zA-ZÀ-ÿ\s'-]+$/.test(name), "Le prénom ne doit contenir que des lettres, espaces, apostrophes ou tirets"),
+  lastName: z.string()
+    .min(2, "Le nom doit contenir au moins 2 caractères")
+    .max(50, "Le nom ne peut pas dépasser 50 caractères")
+    .refine(name => /^[a-zA-ZÀ-ÿ\s'-]+$/.test(name), "Le nom ne doit contenir que des lettres, espaces, apostrophes ou tirets"),
+  email: z.string()
+    .email("Adresse email invalide")
+    .refine(email => /@.+\..+$/.test(email), "Format d'email invalide"),
+  password: z.string()
+    .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+    .refine(password => /[A-Z]/.test(password), "Le mot de passe doit contenir au moins une majuscule")
+    .refine(password => /[0-9]/.test(password), "Le mot de passe doit contenir au moins un chiffre"),
+  confirmPassword: z.string(),
   acceptTerms: z.boolean().refine(val => val === true, {
     message: "Vous devez accepter les conditions d'utilisation",
   }),
@@ -106,6 +119,31 @@ const Inscription = () => {
     
     const fetchStructure = async () => {
       try {
+        // Vérifier que la structure existe
+        const structureExists = await StructureService.checkStructureExists(id);
+        
+        if (!structureExists) {
+          setStructure(prev => ({
+            ...prev,
+            loading: false,
+            error: "Structure non trouvée. Veuillez utiliser un lien d'invitation valide.",
+          }));
+          return;
+        }
+        
+        // Vérifier que le quota d'utilisateurs n'est pas dépassé
+        const isQuotaExceeded = await StructureService.isUserQuotaExceeded(id);
+        
+        if (isQuotaExceeded) {
+          setStructure(prev => ({
+            ...prev,
+            loading: false,
+            error: "Cette structure a atteint son nombre maximal d'utilisateurs. Veuillez contacter l'administrateur.",
+          }));
+          return;
+        }
+
+        // Récupérer les données de la structure
         const { data, error } = await supabase
           .from("structures")
           .select("*")
@@ -122,6 +160,7 @@ const Inscription = () => {
           return;
         }
 
+        // Mettre à jour les données de la structure
         setStructure({
           id: data.id,
           name: data.name,
@@ -147,16 +186,13 @@ const Inscription = () => {
   // Check if user is already logged in
   useEffect(() => {
     if (currentUser && !structure.loading) {
-      // Only redirect if not on the inscription page or if a structure error exists
-      if (!structureId || structure.error) {
-        toast({
-          title: "Déjà connecté",
-          description: "Vous êtes déjà connecté. Vous avez été redirigé vers le tableau de bord.",
-        });
-        navigate("/dashboard");
-      }
+      toast({
+        title: "Déjà connecté",
+        description: "Vous êtes déjà connecté. Vous avez été redirigé vers le tableau de bord.",
+      });
+      navigate("/dashboard");
     }
-  }, [currentUser, navigate, toast, structure.loading, structure.error, structureId]);
+  }, [currentUser, navigate, toast, structure.loading]);
 
   const onSubmit = async (data: FormValues) => {
     if (!structureId) {
@@ -281,10 +317,13 @@ const Inscription = () => {
         </div>
         
         <Card className="border-opacity-50 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-lavender-50 rounded-t-lg">
-            <CardTitle className="text-lavender-800">Créer votre compte</CardTitle>
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
+            <div className="flex items-center space-x-2">
+              <Users className="h-5 w-5 text-purple-600" />
+              <CardTitle className="text-purple-800">Créer votre compte éducateur</CardTitle>
+            </div>
             <CardDescription>
-              Remplissez le formulaire ci-dessous pour rejoindre {structure.name}
+              Remplissez le formulaire ci-dessous pour rejoindre <span className="font-medium">{structure.name}</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -296,7 +335,10 @@ const Inscription = () => {
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Prénom</FormLabel>
+                        <FormLabel className="flex items-center gap-1.5">
+                          <User className="h-3.5 w-3.5 text-gray-500" />
+                          Prénom
+                        </FormLabel>
                         <FormControl>
                           <Input placeholder="Jean" {...field} />
                         </FormControl>
@@ -310,7 +352,10 @@ const Inscription = () => {
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nom</FormLabel>
+                        <FormLabel className="flex items-center gap-1.5">
+                          <User className="h-3.5 w-3.5 text-gray-500" />
+                          Nom
+                        </FormLabel>
                         <FormControl>
                           <Input placeholder="Dupont" {...field} />
                         </FormControl>
@@ -320,15 +365,31 @@ const Inscription = () => {
                   />
                 </div>
                 
+                <div className="mb-2 p-3 bg-blue-50 border border-blue-100 rounded-md">
+                  <div className="flex items-start gap-2">
+                    <Building className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium">Vous rejoignez {structure.name}</p>
+                      <p className="text-xs">{structure.city} · {structure.type}</p>
+                    </div>
+                  </div>
+                </div>
+
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel className="flex items-center gap-1.5">
+                        <AtSign className="h-3.5 w-3.5 text-gray-500" />
+                        Email professionnel
+                      </FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="jean.dupont@exemple.fr" {...field} />
                       </FormControl>
+                      <FormDescription>
+                        Cet email sera utilisé pour vous connecter
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -339,12 +400,15 @@ const Inscription = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mot de passe</FormLabel>
+                      <FormLabel className="flex items-center gap-1.5">
+                        <Lock className="h-3.5 w-3.5 text-gray-500" />
+                        Mot de passe
+                      </FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
                       <FormDescription>
-                        Au moins 8 caractères
+                        Au moins 8 caractères, 1 majuscule et 1 chiffre
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -356,7 +420,10 @@ const Inscription = () => {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirmer le mot de passe</FormLabel>
+                      <FormLabel className="flex items-center gap-1.5">
+                        <Shield className="h-3.5 w-3.5 text-gray-500" />
+                        Confirmer le mot de passe
+                      </FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
@@ -369,7 +436,7 @@ const Inscription = () => {
                   control={form.control}
                   name="acceptTerms"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 border border-lavender-200 bg-lavender-50">
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 border border-purple-200 bg-purple-50">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
@@ -388,10 +455,20 @@ const Inscription = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-lavender-500 hover:bg-lavender-600"
+                  className="w-full flex items-center justify-center gap-2"
                   disabled={isSubmitting || !form.formState.isValid}
                 >
-                  {isSubmitting ? "Inscription en cours..." : "S'inscrire"}
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
+                      <span>Inscription en cours...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Users className="h-4 w-4" />
+                      <span>Créer mon compte éducateur</span>
+                    </>
+                  )}
                 </Button>
               </form>
             </Form>
@@ -399,7 +476,7 @@ const Inscription = () => {
           <CardFooter className="flex justify-center border-t pt-6">
             <div className="text-sm text-gray-600">
               Vous avez déjà un compte?{" "}
-              <a href="/" className="text-lavender-600 hover:underline">
+              <a href="/" className="text-purple-600 hover:underline">
                 Se connecter
               </a>
             </div>

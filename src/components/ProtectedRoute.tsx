@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRole?: "user" | "admin" | "super_admin";
+  requiredRole?: "user" | "admin" | "super_admin" | "educateur";
   redirectTo?: string;
 }
 
@@ -17,7 +17,7 @@ const ProtectedRoute = ({
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading && (!currentUser || (requiredRole === "super_admin" && currentUser.role !== "super_admin"))) {
+    if (!isLoading && (!currentUser || (requiredRole && currentUser.role !== requiredRole))) {
       navigate(redirectTo);
     }
   }, [currentUser, isLoading, navigate, redirectTo, requiredRole]);
@@ -31,8 +31,8 @@ const ProtectedRoute = ({
     );
   }
 
-  // If we need super_admin and user isn't one, we'll redirect (handled in useEffect)
-  if (requiredRole === "super_admin" && currentUser?.role !== "super_admin") {
+  // If user doesn't have the required role, we'll redirect (handled in useEffect)
+  if (requiredRole && currentUser?.role !== requiredRole) {
     return null;
   }
 

@@ -2,11 +2,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+import { EducateurRole } from "@/types/educateurs";
+
 // Define user types
 export interface User {
   id: string;
   email: string;
-  role: "user" | "admin" | "super_admin" | "educateur";
+  role: EducateurRole;
   name?: string;
   structure_id?: string;
 }
@@ -31,7 +33,7 @@ const AuthContext = createContext<AuthContextType>({
 // Custom hook to use the auth context
 export const useAuth = () => useContext(AuthContext);
 
-// Mock user for demonstration
+// Mock user for demonstration - only used in development
 const MOCK_USER: User = {
   id: "1",
   email: "admin@gensys.app",

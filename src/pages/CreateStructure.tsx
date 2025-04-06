@@ -1,4 +1,4 @@
-import { useState, FormEvent, ChangeEvent } from "react";
+import { useState, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -27,22 +27,44 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, Copy, Upload } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { 
+  CheckCircle, 
+  Copy, 
+  Upload, 
+  Building2, 
+  Shield, 
+  Users, 
+  AtSign, 
+  MapPin 
+} from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
+import { useAuth } from "@/context/AuthContext";
+import { StructureService } from "@/services/StructureService";
 
 const formSchema = z.object({
-  name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
-  city: z.string().min(2, "La ville doit contenir au moins 2 caractères"),
+  name: z.string()
+    .min(2, "Le nom doit contenir au moins 2 caractères")
+    .max(100, "Le nom ne peut pas dépasser 100 caractères")
+    .refine(name => !/^\s*$/.test(name), "Le nom ne peut pas être uniquement des espaces"),
+  city: z.string()
+    .min(2, "La ville doit contenir au moins 2 caractères")
+    .max(50, "La ville ne peut pas dépasser 50 caractères")
+    .refine(city => !/^\d+$/.test(city), "La ville ne peut pas être uniquement des chiffres"),
   type: z.enum(["MECS", "SISEIP", "ITEP", "Autre"], {
     required_error: "Veuillez sélectionner un type de structure",
   }),
-  email: z.string().email("Adresse email invalide"),
-  maxUsers: z.number().min(1, "Au moins 1 utilisateur requis").max(500),
+  email: z.string()
+    .email("Adresse email invalide")
+    .refine(email => /@.+\..+$/.test(email), "Format d'email invalide"),
+  maxUsers: z.number()
+    .int("Le nombre d'utilisateurs doit être un nombre entier")
+    .min(1, "Au moins 1 utilisateur requis")
+    .max(500, "Maximum 500 utilisateurs"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -50,11 +72,31 @@ type FormValues = z.infer<typeof formSchema>;
 const CreateStructure = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [createdStructure, setCreatedStructure] = useState<{ id: string; name: string } | null>(null);
   const [inviteLink, setInviteLink] = useState<string>("");
+  
+  // Vérifier que l'utilisateur est admin ou super_admin
+  if (currentUser?.role !== "admin" && currentUser?.role !== "super_admin") {
+    return (
+      <div className="container mx-auto py-10 px-4 sm:px-6">
+        <Alert variant="destructive">
+          <AlertTitle>Accès refusé</AlertTitle>
+          <AlertDescription>
+            Vous n'avez pas les droits nécessaires pour créer une structure.
+          </AlertDescription>
+        </Alert>
+        <div className="text-center mt-4">
+          <Button onClick={() => navigate("/dashboard")}>
+            Retour au tableau de bord
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -178,14 +220,29 @@ const CreateStructure = () => {
       
       console.log("Structure créée avec succès avec l'ID:", structureId);
       
-      setCreatedStructure({
-        id: structureId,
-        name: data.name,
-      });
-      
-      const baseUrl = window.location.origin;
-      const link = `${baseUrl}/inscription?structure_id=${structureId}`;
-      setInviteLink(link);
+      // Utiliser le service pour générer un lien d'invitation officiel
+      try {
+        const inviteResponse = await StructureService.generateInviteLink(structureId);
+        
+        setCreatedStructure({
+          id: inviteResponse.structure.id,
+          name: data.name,
+        });
+        
+        setInviteLink(inviteResponse.invite_link);
+      } catch (inviteError) {
+        console.error("Erreur lors de la génération du lien d'invitation:", inviteError);
+        
+        // Fallback en cas d'erreur
+        setCreatedStructure({
+          id: structureId,
+          name: data.name,
+        });
+        
+        const baseUrl = window.location.origin;
+        const link = `${baseUrl}/inscription?structure_id=${structureId}`;
+        setInviteLink(link);
+      }
       
       toast({
         title: "Structure créée avec succès",
@@ -218,18 +275,19 @@ const CreateStructure = () => {
         </h1>
         
         {createdStructure ? (
-          <Card className="border-green-200 bg-gradient-to-br from-white to-purple-50">
+          <Card className="border-green-200 bg-gradient-to-br from-white to-purple-50 shadow-lg">
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <CheckCircle className="h-6 w-6 text-green-500" />
                 <CardTitle>Structure créée avec succès</CardTitle>
               </div>
               <CardDescription>
-                La structure {createdStructure.name} a été créée avec succès
+                La structure <span className="font-semibold">{createdStructure.name}</span> a été créée avec succès
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Alert className="bg-lavender-50 border-lavender-200 mb-4">
+              <Alert className="bg-purple-50 border-purple-200 mb-4">
+                <AlertTitle className="text-purple-800">Lien d'invitation</AlertTitle>
                 <AlertDescription className="text-sm text-gray-700">
                   Partagez ce lien avec les personnes que vous souhaitez inviter à rejoindre la structure.
                   Ils pourront créer un compte et seront automatiquement associés à cette structure.
@@ -250,10 +308,28 @@ const CreateStructure = () => {
                   <span>Copier</span>
                 </Button>
               </div>
+              
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <h3 className="font-semibold text-sm text-gray-700 mb-2">Prochaines étapes :</h3>
+                <ul className="text-sm text-gray-600 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <div className="mt-0.5 bg-green-100 text-green-800 p-1 rounded-full flex-shrink-0">
+                      <Users className="h-3 w-3" />
+                    </div>
+                    <span>Partagez le lien d'invitation pour ajouter des éducateurs</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="mt-0.5 bg-purple-100 text-purple-800 p-1 rounded-full flex-shrink-0">
+                      <Shield className="h-3 w-3" />
+                    </div>
+                    <span>Configurez les droits et rôles dans votre tableau de bord</span>
+                  </li>
+                </ul>
+              </div>
             </CardContent>
             <CardFooter>
               <Button 
-                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
+                className="w-full"
                 onClick={() => navigate("/dashboard")}
               >
                 Retour au tableau de bord
@@ -261,98 +337,131 @@ const CreateStructure = () => {
             </CardFooter>
           </Card>
         ) : (
-          <Card className="bg-white shadow-md">
-            <CardHeader>
-              <CardTitle>Informations de la structure</CardTitle>
-              <CardDescription>
-                Veuillez remplir les informations ci-dessous pour créer une nouvelle structure.
-              </CardDescription>
+          <Card className="bg-white shadow-md border-t-4 border-t-purple-500">
+            <CardHeader className="pb-2">
+              <div className="flex items-center space-x-3">
+                <Building2 className="h-6 w-6 text-purple-500" />
+                <div>
+                  <CardTitle>Créer une nouvelle structure</CardTitle>
+                  <CardDescription>
+                    Complétez le formulaire ci-dessous pour ajouter une structure éducative
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
+              <div className="mb-6 p-3 bg-blue-50 border border-blue-100 rounded-md text-sm text-blue-800">
+                <p className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 flex-shrink-0" />
+                  <span>
+                    Les structures disposent d'espaces de données séparés et sécurisés. Toutes les données des utilisateurs sont isolées par structure.
+                  </span>
+                </p>
+              </div>
+              
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nom de la structure</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex: Centre éducatif Saint-Joseph" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ville</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex: Lyon" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Type de structure</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-1.5">
+                            <Building2 className="h-3.5 w-3.5 text-gray-500" />
+                            Nom de la structure
+                          </FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner un type" />
-                            </SelectTrigger>
+                            <Input placeholder="Ex: Centre éducatif Saint-Joseph" {...field} />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="MECS">MECS</SelectItem>
-                            <SelectItem value="SISEIP">SISEIP</SelectItem>
-                            <SelectItem value="ITEP">ITEP</SelectItem>
-                            <SelectItem value="Autre">Autre</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5 text-gray-500" />
+                            Ville
+                          </FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: Lyon" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email de référence</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="email" 
-                            placeholder="Ex: contact@structure.fr" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Cet email sera utilisé pour les communications importantes
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Type de structure</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionner un type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="MECS">MECS</SelectItem>
+                              <SelectItem value="SISEIP">SISEIP</SelectItem>
+                              <SelectItem value="ITEP">ITEP</SelectItem>
+                              <SelectItem value="Autre">Autre</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Type de structure éducative
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-1.5">
+                            <AtSign className="h-3.5 w-3.5 text-gray-500" />
+                            Email de référence
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="email" 
+                              placeholder="Ex: contact@structure.fr" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Pour les communications importantes
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   
                   <FormField
                     control={form.control}
                     name="maxUsers"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nombre maximal d'utilisateurs</FormLabel>
+                        <FormLabel className="flex items-center gap-1.5">
+                          <Users className="h-3.5 w-3.5 text-gray-500" />
+                          Nombre maximal d'utilisateurs
+                        </FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -362,15 +471,18 @@ const CreateStructure = () => {
                             onChange={(e) => field.onChange(parseInt(e.target.value))}
                           />
                         </FormControl>
+                        <FormDescription>
+                          Limite le nombre d'éducateurs pouvant rejoindre la plateforme
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   
-                  <div>
+                  <div className="border rounded-md p-4 bg-gray-50">
                     <FormLabel className="block mb-2">Logo de la structure</FormLabel>
-                    <div className="flex items-center space-x-4">
-                      <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start space-x-4">
+                      <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-white transition-colors">
                         {logoPreview ? (
                           <img 
                             src={logoPreview} 
@@ -391,12 +503,17 @@ const CreateStructure = () => {
                         />
                       </label>
                       
-                      <div className="text-sm text-gray-500">
-                        <p>Formats acceptés: SVG, PNG, JPG</p>
-                        <p>Fond transparent recommandé</p>
+                      <div className="text-sm text-gray-600">
+                        <p className="font-medium mb-1">Logo de la structure</p>
+                        <ul className="list-disc list-inside space-y-1 text-xs">
+                          <li>Formats acceptés: SVG, PNG, JPG</li>
+                          <li>Taille recommandée: 200x200px minimum</li>
+                          <li>Fond transparent recommandé</li>
+                          <li>Maximum 2 Mo</li>
+                        </ul>
                         {logoFile && (
-                          <p className="text-green-600 font-medium mt-1">
-                            {logoFile.name} ({Math.round(logoFile.size / 1024)} Ko)
+                          <p className="text-green-600 font-medium mt-2 text-xs">
+                            ✓ {logoFile.name} ({Math.round(logoFile.size / 1024)} Ko)
                           </p>
                         )}
                       </div>
@@ -405,12 +522,12 @@ const CreateStructure = () => {
                   
                   <Button 
                     type="submit" 
-                    className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
+                    className="w-full"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
                       <>
-                        <span className="animate-spin mr-2">⏳</span>
+                        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent mr-2 rounded-full"></div>
                         Création en cours...
                       </>
                     ) : (
