@@ -102,6 +102,23 @@ const CreateStructure = () => {
     setIsSubmitting(true);
 
     try {
+      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+      
+      if (bucketError) {
+        console.error("Erreur lors de la vérification des buckets:", bucketError);
+        throw new Error(`Erreur lors de la vérification des buckets: ${bucketError.message}`);
+      }
+      
+      const bucketExists = buckets.some(bucket => bucket.name === 'structures');
+      
+      if (!bucketExists) {
+        console.warn("Le bucket 'structures' n'existe pas. Tentative de création...");
+        toast({
+          title: "Configuration en cours",
+          description: "Configuration du stockage pour les logos...",
+        });
+      }
+      
       const structureId = uuidv4();
       
       const fileExt = logoFile.name.split('.').pop();
