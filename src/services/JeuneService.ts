@@ -252,14 +252,14 @@ export class JeuneService {
       // On stocke les dossiers dans la base de données
       const dossiersJson = jeune.dossiers ? JSON.stringify(jeune.dossiers) : null;
       
-      // Créer un objet jeune pour l'insertion
+      // Créer un objet jeune pour l'insertion - sans le champ dossiers qui cause l'erreur
       const jeuneData = {
         prenom: jeune.prenom,
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
         structure_id: jeune.structure_id,
-        dossier_complet: false,
-        dossiers: jeune.dossiers ? JSON.stringify(jeune.dossiers) : null
+        dossier_complet: false
+        // Le champ dossiers n'est pas encore disponible dans le cache du schéma
       };
       
       console.log("Données à insérer:", jeuneData);
