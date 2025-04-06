@@ -15,8 +15,9 @@ export default defineConfig(({ mode }) => {
       host: "::",
       port: 8080,
       hmr: {
-        // Add a fallback for WebSocket connections
-        clientPort: null,
+        // Force client to use the server host instead of WebSocket URL
+        host: "localhost",
+        port: 8080,
         // Explicitly disable overlay to prevent WS token issues
         overlay: false
       }
