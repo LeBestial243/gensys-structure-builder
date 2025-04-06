@@ -151,6 +151,13 @@ const MesJeunes = () => {
     e.preventDefault();
     console.log("Soumission du formulaire");
     
+    // Vérifier d'abord tous les champs requis
+    if (!newJeune.prenom || !newJeune.nom || !newJeune.date_naissance) {
+      console.error("Champs obligatoires manquants");
+      alert("Veuillez remplir tous les champs obligatoires (nom, prénom, date de naissance)");
+      return;
+    }
+    
     // Vérifier la structure_id - utiliser la structure de l'utilisateur si aucune n'est spécifiée
     const structureId = newJeune.structure_id || currentUser?.structure_id;
     
@@ -159,6 +166,8 @@ const MesJeunes = () => {
       alert("Veuillez sélectionner ou saisir une structure");
       return;
     }
+    
+    console.log("Structure ID finalement utilisée:", structureId);
 
     try {
       setIsLoading(true);
@@ -191,11 +200,13 @@ const MesJeunes = () => {
         date_naissance: "",
         date_entree: new Date().toISOString().split('T')[0],
         photo: null,
-        structure_id: currentUser.structure_id,
+        structure_id: currentUser?.structure_id || "",
         dossiers: [],
       });
       // Conserver uniquement les types de dossiers par défaut
       setTypesOptions(typesOptionsInitiaux);
+      // Réinitialiser le champ de nouveau dossier
+      setNouveauDossier("");
       
       // Rafraîchir la liste des jeunes
       const jeunesData = await JeuneService.getJeunesByStructure(currentUser.structure_id);
@@ -211,8 +222,12 @@ const MesJeunes = () => {
   // Gérer les changements dans le formulaire
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewJeune(prev => ({ ...prev, [name]: value }));
-    console.log(`Champ ${name} mis à jour:`, value);
+    setNewJeune(prev => {
+      const newState = { ...prev, [name]: value };
+      console.log(`Champ ${name} mis à jour:`, value);
+      console.log("Nouvel état:", newState);
+      return newState;
+    });
   };
 
   // Gérer l'upload de photo
@@ -565,34 +580,38 @@ const MesJeunes = () => {
               {/* Sélection de la structure */}
               <div className="space-y-2">
                 <label htmlFor="structure_id" className="text-sm font-medium">Structure</label>
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <Select
-                      value={newJeune.structure_id}
-                      onValueChange={(value) => setNewJeune(prev => ({ ...prev, structure_id: value }))}
-                    >
-                      <SelectTrigger id="structure_id">
-                        <SelectValue placeholder="Sélectionner une structure" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {currentUser?.structure_id && (
-                          <SelectItem value={currentUser.structure_id}>
-                            Structure actuelle
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex-1">
-                    <Input
-                      placeholder="Ou saisir ID de structure manuellement"
-                      value={newJeune.structure_id !== currentUser?.structure_id ? newJeune.structure_id : ""}
-                      onChange={(e) => setNewJeune(prev => ({ ...prev, structure_id: e.target.value }))}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Sélectionner une structure existante</label>
+                  <Select
+                    value={newJeune.structure_id === currentUser?.structure_id ? currentUser?.structure_id : ""}
+                    onValueChange={(value) => setNewJeune(prev => ({ ...prev, structure_id: value }))}
+                  >
+                    <SelectTrigger id="structure_select">
+                      <SelectValue placeholder="Sélectionner une structure" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currentUser?.structure_id && (
+                        <SelectItem value={currentUser.structure_id}>
+                          Structure actuelle
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  
+                  <label className="text-sm font-medium mt-4">Ou saisir un ID manuellement</label>
+                  <Input
+                    id="structure_id_manual"
+                    name="structure_id_manual"
+                    placeholder="ID de structure (format UUID)"
+                    value={newJeune.structure_id !== currentUser?.structure_id ? newJeune.structure_id : ""}
+                    onChange={(e) => {
+                      console.log("Valeur saisie:", e.target.value);
+                      setNewJeune(prev => ({ ...prev, structure_id: e.target.value }));
+                    }}
+                  />
                 </div>
-                <p className="text-xs text-gray-500 italic">
-                  Utilisez l'ID de structure actuelle ou saisissez un ID manuellement
+                <p className="text-xs text-gray-500 italic mt-1">
+                  Pour les éducateurs qui travaillent dans plusieurs structures
                 </p>
               </div>
             </div>
