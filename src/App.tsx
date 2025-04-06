@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import CreateStructure from "./pages/CreateStructure";
 import Inscription from "./pages/Inscription";
+import Educateurs from "./pages/Educateurs";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -31,6 +32,11 @@ const App = () => (
             <Route path="/creer-structure" element={
               <ProtectedRoute requiredRole="super_admin" redirectTo="/dashboard">
                 <CreateStructure />
+              </ProtectedRoute>
+            } />
+            <Route path="/educateurs" element={
+              <ProtectedRoute>
+                <Educateurs />
               </ProtectedRoute>
             } />
             <Route path="/inscription" element={<Inscription />} />

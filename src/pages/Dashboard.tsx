@@ -2,7 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRightCircle } from "lucide-react";
+import { ArrowRightCircle, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Dashboard = () => {
@@ -59,16 +59,22 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle>Statistiques</CardTitle>
-            <CardDescription>Consultez les statistiques de l'application</CardDescription>
+            <CardTitle>Éducateurs</CardTitle>
+            <CardDescription>Consultez la liste des éducateurs</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500 mb-4">
-              Visualisez l'activité des utilisateurs et des structures.
+              Visualisez les éducateurs associés à votre structure.
             </p>
-            <Button variant="outline" className="w-full">
-              Voir les statistiques
-            </Button>
+            <Link to="/educateurs">
+              <Button
+                variant="outline"
+                className="w-full flex items-center gap-2"
+              >
+                <span>Voir les éducateurs</span>
+                <Users className="h-4 w-4" />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
