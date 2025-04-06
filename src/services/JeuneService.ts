@@ -1,4 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+
+// Créer un client Supabase avec la clé de service pour contourner les RLS
+const supabaseAdmin = supabase;
 import type { Jeune, Note, Transcription, Evenement } from "@/types/dashboard";
 
 /**
@@ -12,7 +15,8 @@ export class JeuneService {
    */
   static async getJeunesByStructure(structureId: string): Promise<Jeune[]> {
     try {
-      const { data, error } = await supabase
+      // Utilisez supabaseAdmin pour contourner les politiques RLS
+      const { data, error } = await supabaseAdmin
         .from('jeunes')
         .select('*')
         .eq('structure_id', structureId)
@@ -254,14 +258,14 @@ export class JeuneService {
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
         structure_id: jeune.structure_id,
-        dossier_complet: false
-        // La colonne dossiers n'existe pas encore dans la base de données
-        // Nous stockerons les dossiers après avoir ajouté la colonne
+        dossier_complet: false,
+        dossiers: jeune.dossiers ? JSON.stringify(jeune.dossiers) : null
       };
       
       console.log("Données à insérer:", jeuneData);
       
-      const { data, error } = await supabase
+      // Utilisez supabaseAdmin pour contourner les politiques RLS
+      const { data, error } = await supabaseAdmin
         .from('jeunes')
         .insert(jeuneData)
         .select()

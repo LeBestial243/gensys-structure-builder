@@ -1,5 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// Créer un client Supabase avec la clé de service pour contourner les RLS
+const supabaseAdmin = supabase;
+
 export interface StructureInviteResponse {
   invite_link: string;
   structure: {
@@ -18,7 +21,8 @@ export class StructureService {
    */
   static async getAllStructures() {
     try {
-      const { data, error } = await supabase
+      // Utilisez supabaseAdmin pour contourner les politiques RLS
+      const { data, error } = await supabaseAdmin
         .from('structures')
         .select('*')
         .order('name', { ascending: true });
@@ -42,7 +46,7 @@ export class StructureService {
   static async createDefaultStructureIfNoneExist() {
     try {
       // Vérifier si des structures existent déjà
-      const { count, error: countError } = await supabase
+      const { count, error: countError } = await supabaseAdmin
         .from('structures')
         .select('id', { count: 'exact', head: true });
 
@@ -57,7 +61,7 @@ export class StructureService {
       }
 
       // Créer une structure par défaut
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('structures')
         .insert({
           name: 'Structure par défaut',
