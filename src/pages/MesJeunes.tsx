@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { JeuneService } from "@/services/JeuneService";
-import { Jeune } from "@/types/dashboard";
+import { StructureService } from "@/services/StructureService";
+import { Jeune, Structure } from "@/types/dashboard";
 // Import date-fns
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -88,6 +89,7 @@ const MesJeunes = () => {
   // États pour le nouveau jeune
   const [typesOptions, setTypesOptions] = useState<DossierOption[]>(typesOptionsInitiaux);
   const [nouveauDossier, setNouveauDossier] = useState("");
+  const [structures, setStructures] = useState<Structure[]>([]);
   
   const [newJeune, setNewJeune] = useState({
     prenom: "",
@@ -126,6 +128,30 @@ const MesJeunes = () => {
 
     fetchJeunes();
   }, [currentUser]);
+  
+  // Récupérer les structures disponibles
+  useEffect(() => {
+    const fetchStructures = async () => {
+      try {
+        // Créer une structure par défaut si aucune n'existe
+        await StructureService.createDefaultStructureIfNoneExist();
+        
+        // Récupérer toutes les structures
+        const structuresData = await StructureService.getAllStructures();
+        console.log("Structures disponibles:", structuresData);
+        setStructures(structuresData);
+        
+        // Si l'utilisateur n'a pas de structure_id défini et qu'une structure existe, utiliser la première
+        if (!newJeune.structure_id && structuresData.length > 0) {
+          setNewJeune(prev => ({ ...prev, structure_id: structuresData[0].id }));
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des structures:", error);
+      }
+    };
+    
+    fetchStructures();
+  }, []);
 
   // Filtrage des jeunes selon la recherche
   useEffect(() => {
@@ -596,39 +622,50 @@ const MesJeunes = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Sélectionner une structure existante</label>
                   <Select
-                    value={newJeune.structure_id === currentUser?.structure_id ? currentUser?.structure_id : ""}
+                    value={newJeune.structure_id}
                     onValueChange={(value) => setNewJeune(prev => ({ ...prev, structure_id: value }))}
                   >
                     <SelectTrigger id="structure_select">
                       <SelectValue placeholder="Sélectionner une structure" />
                     </SelectTrigger>
                     <SelectContent>
-                      {currentUser?.structure_id && (
-                        <SelectItem value={currentUser.structure_id}>
-                          Structure actuelle
+                      {structures.map(structure => (
+                        <SelectItem key={structure.id} value={structure.id}>
+                          {structure.name} ({structure.type} - {structure.city})
+                        </SelectItem>
+                      ))}
+                      {structures.length === 0 && (
+                        <SelectItem value="" disabled>
+                          Aucune structure disponible
                         </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
                   
-                  <label className="text-sm font-medium mt-4">Ou saisir un ID manuellement</label>
-                  <Input
-                    id="structure_id_manual"
-                    name="structure_id_manual"
-                    placeholder="ID de structure (format UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)"
-                    value={newJeune.structure_id !== currentUser?.structure_id ? newJeune.structure_id : ""}
-                    onChange={(e) => {
-                      console.log("Valeur saisie:", e.target.value);
-                      setNewJeune(prev => ({ ...prev, structure_id: e.target.value }));
-                    }}
-                  />
-                  <p className="text-xs text-red-500 mt-1">
-                    L'ID doit être un UUID valide (ex: 123e4567-e89b-12d3-a456-426614174000)
-                  </p>
+                  {/* Avancé: saisie manuelle d'un ID */}
+                  <details className="mt-4">
+                    <summary className="text-sm font-medium cursor-pointer">
+                      Avancé: saisir un ID de structure manuellement
+                    </summary>
+                    <div className="mt-2 p-3 border rounded-md bg-gray-50">
+                      <Input
+                        id="structure_id_manual"
+                        name="structure_id_manual"
+                        placeholder="ID de structure (format UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)"
+                        value={!structures.some(s => s.id === newJeune.structure_id) ? newJeune.structure_id : ""}
+                        onChange={(e) => {
+                          console.log("Valeur saisie:", e.target.value);
+                          setNewJeune(prev => ({ ...prev, structure_id: e.target.value }));
+                        }}
+                      />
+                      <p className="text-xs text-red-500 mt-1">
+                        L'ID doit être un UUID valide (ex: 123e4567-e89b-12d3-a456-426614174000)
+                      </p>
+                    </div>
+                  </details>
                 </div>
                 <p className="text-xs text-gray-500 italic mt-1">
-                  Pour les éducateurs qui travaillent dans plusieurs structures.
-                  Si vous voulez utiliser la structure MECS, SISEIP ou ITEP, vous devez d'abord trouver son UUID.
+                  Choisissez la structure dans laquelle le jeune est suivi.
                 </p>
               </div>
             </div>

@@ -13,6 +13,75 @@ export interface StructureInviteResponse {
  */
 export class StructureService {
   /**
+   * Récupère toutes les structures
+   * @returns Liste des structures
+   */
+  static async getAllStructures() {
+    try {
+      const { data, error } = await supabase
+        .from('structures')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error('Erreur lors de la récupération des structures:', error);
+        return [];
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Erreur service structures:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Crée une structure par défaut si aucune n'existe
+   * @returns La structure créée ou null en cas d'erreur
+   */
+  static async createDefaultStructureIfNoneExist() {
+    try {
+      // Vérifier si des structures existent déjà
+      const { count, error: countError } = await supabase
+        .from('structures')
+        .select('id', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('Erreur lors du comptage des structures:', countError);
+        return null;
+      }
+
+      // Si des structures existent déjà, ne rien faire
+      if (count && count > 0) {
+        return null;
+      }
+
+      // Créer une structure par défaut
+      const { data, error } = await supabase
+        .from('structures')
+        .insert({
+          name: 'Structure par défaut',
+          type: 'MECS',
+          city: 'Paris',
+          email: 'contact@structure-par-defaut.fr',
+          max_users: 50
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erreur lors de la création de la structure par défaut:', error);
+        return null;
+      }
+
+      console.log('Structure par défaut créée avec succès:', data);
+      return data;
+    } catch (error) {
+      console.error('Erreur lors de la création de la structure par défaut:', error);
+      return null;
+    }
+  }
+  /**
    * Génère un lien d'invitation pour une structure
    * @param structureId ID de la structure
    * @returns Objet contenant le lien d'invitation et les informations de structure
