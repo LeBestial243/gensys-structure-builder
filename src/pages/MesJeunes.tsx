@@ -63,14 +63,13 @@ import {
 } from "@/components/ui/select";
 
 // Types pour les dossiers
-type TypeDossier = "administratif" | "éducatif" | "médical" | "scolaire";
-
 interface DossierOption {
-  id: TypeDossier;
+  id: string;
   label: string;
+  custom?: boolean;
 }
 
-const typesOptions: DossierOption[] = [
+const typesOptionsInitiaux: DossierOption[] = [
   { id: "administratif", label: "Administratif" },
   { id: "éducatif", label: "Éducatif" },
   { id: "médical", label: "Médical" },
@@ -87,6 +86,9 @@ const MesJeunes = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   
   // États pour le nouveau jeune
+  const [typesOptions, setTypesOptions] = useState<DossierOption[]>(typesOptionsInitiaux);
+  const [nouveauDossier, setNouveauDossier] = useState("");
+  
   const [newJeune, setNewJeune] = useState({
     prenom: "",
     nom: "",
@@ -94,7 +96,7 @@ const MesJeunes = () => {
     date_entree: new Date().toISOString().split('T')[0],
     photo: null as File | null,
     structure_id: currentUser?.structure_id || "",
-    dossiers: [] as TypeDossier[],
+    dossiers: [] as string[],
   });
 
   // État pour le filtrage
@@ -148,17 +150,22 @@ const MesJeunes = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!currentUser?.structure_id) return;
+    if (!newJeune.structure_id) {
+      console.error("ID de structure manquant");
+      return;
+    }
 
     try {
       setIsLoading(true);
+      
+      console.log("Données du formulaire:", newJeune);
       
       // Créer le nouveau jeune en utilisant l'API
       const nouveauJeune = await JeuneService.createJeune({
         prenom: newJeune.prenom,
         nom: newJeune.nom,
         date_naissance: newJeune.date_naissance,
-        structure_id: currentUser.structure_id,
+        structure_id: newJeune.structure_id,
         dossiers: newJeune.dossiers
       });
       
@@ -179,6 +186,8 @@ const MesJeunes = () => {
         structure_id: currentUser.structure_id,
         dossiers: [],
       });
+      // Conserver uniquement les types de dossiers par défaut
+      setTypesOptions(typesOptionsInitiaux);
       
       // Rafraîchir la liste des jeunes
       const jeunesData = await JeuneService.getJeunesByStructure(currentUser.structure_id);
@@ -205,7 +214,7 @@ const MesJeunes = () => {
   };
 
   // Gérer la sélection/désélection d'un type de dossier
-  const toggleDossierType = (type: TypeDossier) => {
+  const toggleDossierType = (type: string) => {
     setNewJeune(prev => {
       const dossiers = [...prev.dossiers];
       const index = dossiers.indexOf(type);
@@ -218,6 +227,26 @@ const MesJeunes = () => {
       
       return { ...prev, dossiers };
     });
+  };
+  
+  // Ajouter un nouveau type de dossier personnalisé
+  const ajouterDossierPersonnalise = () => {
+    if (nouveauDossier.trim() !== '') {
+      // Créer un ID unique en normalisant et en transformant le nom du dossier
+      const id = nouveauDossier.trim().toLowerCase().replace(/\s+/g, '_');
+      
+      // Vérifier si ce dossier existe déjà
+      if (!typesOptions.some(d => d.id === id || d.label.toLowerCase() === nouveauDossier.trim().toLowerCase())) {
+        const newOption: DossierOption = { 
+          id, 
+          label: nouveauDossier.trim(),
+          custom: true 
+        };
+        
+        setTypesOptions(prev => [...prev, newOption]);
+        setNouveauDossier('');
+      }
+    }
   };
 
   // Formater la date pour l'affichage
@@ -481,27 +510,68 @@ const MesJeunes = () => {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Dossiers à créer</label>
-              <div className="grid grid-cols-2 gap-2">
-                {typesOptions.map((option) => (
-                  <label 
-                    key={option.id} 
-                    className={`flex items-center p-3 rounded-lg border cursor-pointer ${
-                      newJeune.dossiers.includes(option.id) 
-                        ? 'bg-blue-50 border-blue-300' 
-                        : 'bg-white border-gray-200'
-                    }`}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Dossiers à créer</label>
+                <div className="flex items-center gap-2 mb-3">
+                  <Input
+                    placeholder="Ajouter un nouveau type de dossier..."
+                    value={nouveauDossier}
+                    onChange={(e) => setNouveauDossier(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    type="button" 
+                    onClick={ajouterDossierPersonnalise} 
+                    disabled={nouveauDossier.trim() === ''}
+                    size="sm"
                   >
-                    <input 
-                      type="checkbox" 
-                      className="mr-2"
-                      checked={newJeune.dossiers.includes(option.id)}
-                      onChange={() => toggleDossierType(option.id)}
-                    />
-                    {option.label}
-                  </label>
-                ))}
+                    Ajouter
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {typesOptions.map((option) => (
+                    <label 
+                      key={option.id} 
+                      className={`flex items-center p-3 rounded-lg border cursor-pointer ${
+                        newJeune.dossiers.includes(option.id) 
+                          ? 'bg-blue-50 border-blue-300' 
+                          : option.custom 
+                            ? 'bg-purple-50 border-purple-200' 
+                            : 'bg-white border-gray-200'
+                      }`}
+                    >
+                      <input 
+                        type="checkbox" 
+                        className="mr-2"
+                        checked={newJeune.dossiers.includes(option.id)}
+                        onChange={() => toggleDossierType(option.id)}
+                      />
+                      {option.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Sélection de la structure */}
+              <div className="space-y-2">
+                <label htmlFor="structure_id" className="text-sm font-medium">Structure</label>
+                <Select
+                  value={newJeune.structure_id}
+                  onValueChange={(value) => setNewJeune(prev => ({ ...prev, structure_id: value }))}
+                >
+                  <SelectTrigger id="structure_id">
+                    <SelectValue placeholder="Sélectionner une structure" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currentUser?.structure_id && (
+                      <SelectItem value={currentUser.structure_id}>
+                        Structure actuelle
+                      </SelectItem>
+                    )}
+                    {/* Ici, vous pourriez ajouter d'autres structures si l'utilisateur a des permissions */}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             

@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS jeunes (
   date_naissance DATE NOT NULL,
   structure_id UUID NOT NULL REFERENCES structures(id) ON DELETE CASCADE,
   dossier_complet BOOLEAN NOT NULL DEFAULT false,
+  dossiers JSONB, -- Pour stocker les types de dossiers personnalisés
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
