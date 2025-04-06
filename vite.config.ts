@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
             host: "localhost",
             port: 8080,
             overlay: false,
-            clientPort: null // Force client to use the same port
+            clientPort: undefined // Changed from null to undefined to match TypeScript type
           }
     },
     plugins: [
