@@ -254,8 +254,9 @@ export class JeuneService {
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
         structure_id: jeune.structure_id,
-        dossier_complet: false,
-        dossiers: dossiersJson  // Stocker les dossiers en tant que JSON
+        dossier_complet: false
+        // La colonne dossiers n'existe pas encore dans la base de données
+        // Nous stockerons les dossiers après avoir ajouté la colonne
       };
       
       console.log("Données à insérer:", jeuneData);
