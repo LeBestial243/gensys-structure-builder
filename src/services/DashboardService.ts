@@ -152,7 +152,7 @@ export class DashboardService {
             description: `Entretien avec ${t.jeunes.prenom} ${t.jeunes.nom} du ${new Date(t.date_entretien).toLocaleDateString()}`,
             type: 'transcription',
             date: t.date_entretien,
-            lien: `/jeunes/${t.jeune_id}/transcriptions/${t.id}`,
+            lien: `/mes-jeunes/${t.jeune_id}/transcriptions/${t.id}`,
             jeune_id: t.jeune_id,
             structure_id: t.structure_id
           });
@@ -177,7 +177,7 @@ export class DashboardService {
             description: `Le dossier de ${j.prenom} ${j.nom} est incomplet`,
             type: 'dossier',
             date: new Date().toISOString(),
-            lien: `/jeunes/${j.id}`,
+            lien: `/mes-jeunes/${j.id}`,
             jeune_id: j.id,
             structure_id: j.structure_id
           });
@@ -213,7 +213,7 @@ export class DashboardService {
               description: `Échéance le ${new Date(evt.date).toLocaleDateString()} pour ${evt.jeunes.prenom} ${evt.jeunes.nom}`,
               type: 'note',
               date: evt.date,
-              lien: `/jeunes/${evt.jeune_id}/notes/nouvelle`,
+              lien: `/mes-jeunes/${evt.jeune_id}/notes/nouvelle`,
               jeune_id: evt.jeune_id,
               structure_id: evt.structure_id
             });

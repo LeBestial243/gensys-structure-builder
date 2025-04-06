@@ -151,7 +151,7 @@ const Dashboard = () => {
           </CardContent>
           <CardFooter className="pt-0">
             <Button variant="ghost" size="sm" className="text-xs text-purple-600 dark:text-purple-400">
-              <Link to="/jeunes" className="flex items-center gap-1">
+              <Link to="/mes-jeunes" className="flex items-center gap-1">
                 Voir tous les jeunes
                 <ArrowRightCircle className="h-3 w-3 ml-1" />
               </Link>
@@ -244,7 +244,7 @@ const Dashboard = () => {
               ) : (
                 <div className="space-y-3">
                   {evenementsDuJour.map(evt => (
-                    <Link key={evt.id} to={`/jeunes/${evt.jeune_id}`}>
+                    <Link key={evt.id} to={`/mes-jeunes/${evt.jeune_id}`}>
                       <div className="p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors border text-sm">
                         <div className="font-medium">{evt.titre}</div>
                         <div className="text-gray-500 dark:text-gray-400 text-xs mt-1">{evt.description}</div>
@@ -302,7 +302,7 @@ const Dashboard = () => {
 
       {/* Boutons d'action rapide */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-        <Link to="/jeunes">
+        <Link to="/mes-jeunes">
           <Button className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 shadow-sm dark:shadow-slate-800">
             <Users className="h-4 w-4 mr-2" />
             Mes Jeunes
