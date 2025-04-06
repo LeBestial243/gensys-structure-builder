@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,7 +61,8 @@ type StructureData = {
 const Inscription = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { currentUser, logout } = useAuth();
+  const location = useLocation();
+  const { currentUser, refreshUser } = useAuth();
   const [structureId, setStructureId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [structure, setStructure] = useState<StructureData>({
@@ -88,25 +88,9 @@ const Inscription = () => {
     },
   });
 
-  // If a user is already logged in, offer them the choice to logout or go to dashboard
-  useEffect(() => {
-    const handleExistingUser = async () => {
-      if (currentUser) {
-        // Show toast with option to logout
-        toast({
-          title: "Déjà connecté",
-          description: "Vous êtes déjà connecté. Vous avez été redirigé vers le tableau de bord.",
-        });
-        navigate("/dashboard");
-      }
-    };
-    
-    handleExistingUser();
-  }, [currentUser, navigate, toast, logout]);
-
   // Get structure_id from URL and fetch structure data
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const id = params.get("structure_id");
 
     if (!id) {
@@ -158,7 +142,21 @@ const Inscription = () => {
     };
 
     fetchStructure();
-  }, []);
+  }, [location.search]);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    if (currentUser && !structure.loading) {
+      // Only redirect if not on the inscription page or if a structure error exists
+      if (!structureId || structure.error) {
+        toast({
+          title: "Déjà connecté",
+          description: "Vous êtes déjà connecté. Vous avez été redirigé vers le tableau de bord.",
+        });
+        navigate("/dashboard");
+      }
+    }
+  }, [currentUser, navigate, toast, structure.loading, structure.error, structureId]);
 
   const onSubmit = async (data: FormValues) => {
     if (!structureId) {
@@ -207,6 +205,9 @@ const Inscription = () => {
       }
 
       console.log("✅ Utilisateur inscrit :", authData.user);
+      
+      // Refresh the user data
+      await refreshUser();
 
       toast({
         title: "Inscription réussie",
