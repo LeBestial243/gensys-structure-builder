@@ -29,13 +29,13 @@ export class StructureService {
 
       if (error) {
         console.error('Erreur lors de la récupération des structures:', error);
-        return [];
+        throw new Error(`Erreur lors de la récupération des structures: ${error.message}`);
       }
 
       return data;
     } catch (error) {
       console.error('Erreur service structures:', error);
-      return [];
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -52,7 +52,7 @@ export class StructureService {
 
       if (countError) {
         console.error('Erreur lors du comptage des structures:', countError);
-        return null;
+        throw new Error(`Erreur lors du comptage des structures: ${countError.message}`);
       }
 
       // Si des structures existent déjà, ne rien faire
@@ -75,14 +75,14 @@ export class StructureService {
 
       if (error) {
         console.error('Erreur lors de la création de la structure par défaut:', error);
-        return null;
+        throw new Error(`Erreur lors de la création de la structure par défaut: ${error.message}`);
       }
 
       console.log('Structure par défaut créée avec succès:', data);
       return data;
     } catch (error) {
       console.error('Erreur lors de la création de la structure par défaut:', error);
-      return null;
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
   /**
@@ -98,13 +98,14 @@ export class StructureService {
       });
 
       if (error) {
+        console.error(`Erreur lors de la génération du lien:`, error);
         throw new Error(`Erreur lors de la génération du lien: ${error.message}`);
       }
 
       return data as StructureInviteResponse;
     } catch (error) {
       console.error('Erreur service structure:', error);
-      throw error;
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -122,13 +123,15 @@ export class StructureService {
         .single();
 
       if (error) {
+        // Dans ce cas spécifique, une erreur (pas de correspondance) signifie que la structure n'existe pas
+        // donc on ne lance pas d'exception, mais on retourne false
         return false;
       }
 
       return !!data;
     } catch (error) {
       console.error('Erreur lors de la vérification de la structure:', error);
-      return false;
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -146,13 +149,13 @@ export class StructureService {
 
       if (error) {
         console.error('Erreur lors du comptage des éducateurs:', error);
-        return 0;
+        throw new Error(`Erreur lors du comptage des éducateurs: ${error.message}`);
       }
 
       return count || 0;
     } catch (error) {
       console.error('Erreur lors du comptage des éducateurs:', error);
-      return 0;
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -172,7 +175,7 @@ export class StructureService {
 
       if (structureError || !structure) {
         console.error('Erreur lors de la récupération de la structure:', structureError);
-        return true; // Par sécurité, considérer que le quota est dépassé
+        throw new Error(`Erreur lors de la récupération de la structure: ${structureError?.message}`);
       }
 
       // Récupérer le nombre d'éducateurs
@@ -182,7 +185,7 @@ export class StructureService {
       return educateursCount >= structure.max_users;
     } catch (error) {
       console.error('Erreur lors de la vérification du quota:', error);
-      return true; // Par sécurité, considérer que le quota est dépassé
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 }

@@ -18,7 +18,7 @@ export class DashboardService {
    * @param structureId ID de la structure
    * @returns Informations de la structure
    */
-  static async getStructureInfo(structureId: string): Promise<Structure | null> {
+  static async getStructureInfo(structureId: string): Promise<Structure> {
     try {
       const { data, error } = await supabase
         .from('structures')
@@ -28,13 +28,13 @@ export class DashboardService {
 
       if (error) {
         console.error('Erreur lors de la récupération de la structure:', error);
-        return null;
+        throw new Error(`Erreur lors de la récupération de la structure: ${error.message}`);
       }
 
       return data as Structure;
     } catch (error) {
       console.error('Erreur service dashboard:', error);
-      return null;
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -53,6 +53,7 @@ export class DashboardService {
 
       if (jeunesError) {
         console.error('Erreur lors du comptage des jeunes:', jeunesError);
+        throw new Error(`Erreur lors du comptage des jeunes: ${jeunesError.message}`);
       }
 
       // Récupérer le nombre de notes de cette année
@@ -65,6 +66,7 @@ export class DashboardService {
 
       if (notesError) {
         console.error('Erreur lors du comptage des notes:', notesError);
+        throw new Error(`Erreur lors du comptage des notes: ${notesError.message}`);
       }
 
       // Calculer le nombre d'alertes
@@ -78,11 +80,7 @@ export class DashboardService {
       };
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques:', error);
-      return {
-        nombreJeunes: 0,
-        nombreNotes: 0,
-        nombreAlertes: 0
-      };
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -109,13 +107,13 @@ export class DashboardService {
 
       if (error) {
         console.error('Erreur lors de la récupération des événements:', error);
-        return [];
+        throw new Error(`Erreur lors de la récupération des événements: ${error.message}`);
       }
 
       return data as Evenement[];
     } catch (error) {
       console.error('Erreur lors de la récupération des événements:', error);
-      return [];
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -137,6 +135,7 @@ export class DashboardService {
 
       if (transcriptionsError) {
         console.error('Erreur lors de la récupération des transcriptions:', transcriptionsError);
+        throw new Error(`Erreur lors de la récupération des transcriptions: ${transcriptionsError.message}`);
       } else if (transcriptions) {
         // Transformer les transcriptions en alertes
         transcriptions.forEach((t: { 
@@ -168,6 +167,7 @@ export class DashboardService {
 
       if (jeunesError) {
         console.error('Erreur lors de la récupération des jeunes:', jeunesError);
+        throw new Error(`Erreur lors de la récupération des jeunes: ${jeunesError.message}`);
       } else if (jeunes) {
         // Transformer les jeunes avec dossiers incomplets en alertes
         jeunes.forEach((j: Jeune) => {
@@ -194,6 +194,7 @@ export class DashboardService {
 
       if (evenementsError) {
         console.error('Erreur lors de la récupération des événements:', evenementsError);
+        throw new Error(`Erreur lors de la récupération des événements: ${evenementsError.message}`);
       } else if (evenements) {
         // Vérifier pour chaque échéance s'il existe une note
         for (const evt of evenements) {
@@ -205,6 +206,7 @@ export class DashboardService {
 
           if (noteError) {
             console.error('Erreur lors de la vérification des notes:', noteError);
+            throw new Error(`Erreur lors de la vérification des notes: ${noteError.message}`);
           } else if (count === 0) {
             // S'il n'y a pas de note récente, créer une alerte
             alertes.push({
@@ -225,7 +227,7 @@ export class DashboardService {
       return alertes.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     } catch (error) {
       console.error('Erreur lors de la récupération des alertes:', error);
-      return [];
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 }

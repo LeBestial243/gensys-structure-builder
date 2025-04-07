@@ -24,13 +24,13 @@ export class JeuneService {
 
       if (error) {
         console.error('Erreur lors de la récupération des jeunes:', error);
-        return [];
+        throw new Error(`Erreur lors de la récupération des jeunes: ${error.message}`);
       }
 
       return data as Jeune[];
     } catch (error) {
       console.error('Erreur service jeunes:', error);
-      return [];
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -55,7 +55,7 @@ export class JeuneService {
       return data as Jeune;
     } catch (error) {
       console.error('Erreur service jeunes:', error);
-      return null;
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -74,13 +74,13 @@ export class JeuneService {
 
       if (error) {
         console.error('Erreur lors de la récupération des notes:', error);
-        return [];
+        throw new Error(`Erreur lors de la récupération des notes: ${error.message}`);
       }
 
       return data as Note[];
     } catch (error) {
       console.error('Erreur service notes:', error);
-      return [];
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -99,13 +99,13 @@ export class JeuneService {
 
       if (error) {
         console.error('Erreur lors de la récupération des transcriptions:', error);
-        return [];
+        throw new Error(`Erreur lors de la récupération des transcriptions: ${error.message}`);
       }
 
       return data as Transcription[];
     } catch (error) {
       console.error('Erreur service transcriptions:', error);
-      return [];
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -124,13 +124,13 @@ export class JeuneService {
 
       if (error) {
         console.error('Erreur lors de la récupération des événements:', error);
-        return [];
+        throw new Error(`Erreur lors de la récupération des événements: ${error.message}`);
       }
 
       return data as Evenement[];
     } catch (error) {
       console.error('Erreur service événements:', error);
-      return [];
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -139,7 +139,7 @@ export class JeuneService {
    * @param note Note à créer
    * @returns Note créée
    */
-  static async createNote(note: Omit<Note, 'id' | 'date_creation'>): Promise<Note | null> {
+  static async createNote(note: Omit<Note, 'id' | 'date_creation'>): Promise<Note> {
     try {
       const { data, error } = await supabase
         .from('notes')
@@ -149,13 +149,13 @@ export class JeuneService {
 
       if (error) {
         console.error('Erreur lors de la création de la note:', error);
-        return null;
+        throw new Error(`Erreur lors de la création de la note: ${error.message}`);
       }
 
       return data as Note;
     } catch (error) {
       console.error('Erreur service notes:', error);
-      return null;
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -166,7 +166,7 @@ export class JeuneService {
    */
   static async createTranscription(
     transcription: Omit<Transcription, 'id' | 'date_entretien'>
-  ): Promise<Transcription | null> {
+  ): Promise<Transcription> {
     try {
       const { data, error } = await supabase
         .from('transcriptions')
@@ -176,13 +176,13 @@ export class JeuneService {
 
       if (error) {
         console.error('Erreur lors de la création de la transcription:', error);
-        return null;
+        throw new Error(`Erreur lors de la création de la transcription: ${error.message}`);
       }
 
       return data as Transcription;
     } catch (error) {
       console.error('Erreur service transcriptions:', error);
-      return null;
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -200,13 +200,13 @@ export class JeuneService {
 
       if (error) {
         console.error('Erreur lors de la validation de la transcription:', error);
-        return false;
+        throw new Error(`Erreur lors de la validation de la transcription: ${error.message}`);
       }
 
       return true;
     } catch (error) {
       console.error('Erreur service transcriptions:', error);
-      return false;
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -224,13 +224,13 @@ export class JeuneService {
 
       if (error) {
         console.error('Erreur lors de la mise à jour du dossier:', error);
-        return false;
+        throw new Error(`Erreur lors de la mise à jour du dossier: ${error.message}`);
       }
 
       return true;
     } catch (error) {
       console.error('Erreur service jeunes:', error);
-      return false;
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 
@@ -249,45 +249,22 @@ export class JeuneService {
     try {
       console.log("Début de création du jeune avec données:", jeune);
       
-      // Générer un UUID valide basé sur le nom de la structure ou un paramètre
-      function generateUUID(seed?: string) {
-        // Si on a une graine, on l'utilise pour générer un UUID déterministe
-        if (seed) {
-          let hash = 0;
-          for (let i = 0; i < seed.length; i++) {
-            hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-            hash |= 0; // Convertir en entier 32 bits
-          }
-          
-          // Utiliser le hash pour générer un UUID qui sera toujours le même pour la même graine
-          const seedHex = Math.abs(hash).toString(16).padStart(8, '0');
-          return `${seedHex.slice(0, 8)}-${seedHex.slice(0, 4)}-4${seedHex.slice(0, 3)}-8${seedHex.slice(0, 3)}-${seedHex.padStart(12, '0')}`;
-        }
-        
-        // Sinon on génère un UUID aléatoire
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-          const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-          return v.toString(16);
-        });
+      // Validation des champs obligatoires
+      if (!jeune.prenom || !jeune.nom || !jeune.date_naissance || !jeune.structure_id) {
+        throw new Error("Les champs nom, prénom, date de naissance et structure sont obligatoires");
       }
       
-      // Générer un UUID basé sur le nom de la structure ou utiliser celui fourni si c'est déjà un UUID
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      const structureUUID = uuidRegex.test(jeune.structure_id) 
-        ? jeune.structure_id 
-        : generateUUID(jeune.structure_id); // Générer un UUID déterministe basé sur le nom
-      
-      console.log("UUID de structure utilisé:", structureUUID);
-      
-      // Créer un objet jeune pour l'insertion avec le champ dossiers
+      // Créer un objet jeune pour l'insertion avec tous les champs nécessaires
       const jeuneData = {
         prenom: jeune.prenom,
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
-        structure_id: structureUUID,
+        structure_id: jeune.structure_id, // Utiliser directement la structure_id fournie
         dossier_complet: false,
-        dossiers: jeune.dossiers // Inclure les dossiers sélectionnés
+        dossiers: jeune.dossiers || [] // Inclure les dossiers sélectionnés ou tableau vide par défaut
       };
+      
+      console.log("Données du jeune à insérer:", jeuneData);
       
       console.log("Données du jeune à insérer:", jeuneData);
       
@@ -302,8 +279,7 @@ export class JeuneService {
 
       if (error) {
         console.error('Erreur lors de la création du jeune:', error);
-        alert(`Erreur lors de la création: ${error.message}`);
-        return null;
+        throw new Error(`Erreur lors de la création: ${error.message}`);
       }
       
       console.log("Jeune créé avec succès:", data);
@@ -311,7 +287,7 @@ export class JeuneService {
       return data as Jeune;
     } catch (error) {
       console.error('Erreur service jeunes:', error);
-      return null;
+      throw error; // Propager l'erreur pour la gérer dans le composant
     }
   }
 }
