@@ -18,7 +18,7 @@ export interface Jeune {
   prenom: string;
   nom: string;
   date_naissance: string;
-  structure_id: string;
+  structure_id?: string | null;
   dossier_complet: boolean;
   created_at: string;
 }
@@ -31,7 +31,7 @@ export interface Note {
   date_creation: string;
   jeune_id: string;
   educateur_id: string;
-  structure_id: string;
+  structure_id?: string | null;
 }
 
 // Transcription d'entretien
@@ -42,7 +42,7 @@ export interface Transcription {
   validee: boolean;
   jeune_id: string;
   educateur_id: string;
-  structure_id: string;
+  structure_id?: string | null;
 }
 
 // Événement du calendrier
@@ -53,7 +53,7 @@ export interface Evenement {
   date: string;
   type: 'rdv' | 'anniversaire' | 'echeance' | 'autre';
   jeune_id: string;
-  structure_id: string;
+  structure_id?: string | null;
 }
 
 // Alerte
@@ -65,7 +65,7 @@ export interface Alerte {
   date: string;
   lien: string;
   jeune_id: string;
-  structure_id: string;
+  structure_id?: string | null;
 }
 
 // Statistiques

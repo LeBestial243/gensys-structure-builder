@@ -9,17 +9,15 @@ import type { Jeune, Note, Transcription, Evenement } from "@/types/dashboard";
  */
 export class JeuneService {
   /**
-   * Récupère la liste des jeunes d'une structure
-   * @param structureId ID de la structure
+   * Récupère la liste des jeunes 
    * @returns Liste des jeunes
    */
-  static async getJeunesByStructure(structureId: string): Promise<Jeune[]> {
+  static async getAllJeunes(): Promise<Jeune[]> {
     try {
       // Utilisez supabaseAdmin pour contourner les politiques RLS
       const { data, error } = await supabaseAdmin
         .from('jeunes')
         .select('*')
-        .eq('structure_id', structureId)
         .order('nom', { ascending: true });
 
       if (error) {
@@ -243,7 +241,6 @@ export class JeuneService {
     prenom: string;
     nom: string;
     date_naissance: string;
-    structure_id: string;
     dossiers?: string[];
   }): Promise<Jeune | null> {
     try {
@@ -254,12 +251,11 @@ export class JeuneService {
         throw new Error("Les champs nom, prénom et date de naissance sont obligatoires");
       }
       
-      // Créer un objet jeune avec UUID fixe pour éviter les problèmes RLS
+      // Créer un objet jeune
       const jeuneData = {
         prenom: jeune.prenom,
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
-        structure_id: "00000000-0000-0000-0000-000000000000", // UUID fixe pour le développement
         dossier_complet: false
       };
       

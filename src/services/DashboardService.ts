@@ -53,11 +53,10 @@ export class DashboardService {
    */
   static async getStats(structureId: string): Promise<DashboardStats> {
     try {
-      // Récupérer le nombre de jeunes
+      // Récupérer le nombre de jeunes (sans filtrer par structure)
       const { count: nombreJeunes = 0, error: jeunesError } = await supabase
         .from('jeunes')
-        .select('id', { count: 'exact', head: true })
-        .eq('structure_id', structureId);
+        .select('id', { count: 'exact', head: true });
 
       if (jeunesError) {
         console.error('Erreur lors du comptage des jeunes:', jeunesError);
@@ -108,7 +107,6 @@ export class DashboardService {
       const { data, error } = await supabase
         .from('evenements')
         .select('*, jeunes(prenom, nom)')
-        .eq('structure_id', structureId)
         .gte('date', dateActuelle)
         .lte('date', dateFuture)
         .order('date', { ascending: true });
@@ -138,7 +136,6 @@ export class DashboardService {
       const { data: transcriptions, error: transcriptionsError } = await supabase
         .from('transcriptions')
         .select('*, jeunes(prenom, nom)')
-        .eq('structure_id', structureId)
         .eq('validee', false);
 
       if (transcriptionsError) {
@@ -161,7 +158,7 @@ export class DashboardService {
             date: t.date_entretien,
             lien: `/mes-jeunes/${t.jeune_id}/transcriptions/${t.id}`,
             jeune_id: t.jeune_id,
-            structure_id: t.structure_id
+            structure_id: null
           });
         });
       }
@@ -170,7 +167,6 @@ export class DashboardService {
       const { data: jeunes, error: jeunesError } = await supabase
         .from('jeunes')
         .select('*')
-        .eq('structure_id', structureId)
         .eq('dossier_complet', false);
 
       if (jeunesError) {
@@ -187,7 +183,7 @@ export class DashboardService {
             date: new Date().toISOString(),
             lien: `/mes-jeunes/${j.id}`,
             jeune_id: j.id,
-            structure_id: j.structure_id
+            structure_id: null
           });
         });
       }
@@ -196,7 +192,6 @@ export class DashboardService {
       const { data: evenements, error: evenementsError } = await supabase
         .from('evenements')
         .select('*, jeunes(prenom, nom)')
-        .eq('structure_id', structureId)
         .eq('type', 'echeance')
         .lte('date', new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000).toISOString());
 
@@ -225,7 +220,7 @@ export class DashboardService {
               date: evt.date,
               lien: `/mes-jeunes/${evt.jeune_id}/notes/nouvelle`,
               jeune_id: evt.jeune_id,
-              structure_id: evt.structure_id
+              structure_id: null
             });
           }
         }

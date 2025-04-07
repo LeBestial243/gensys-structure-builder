@@ -13,13 +13,11 @@ BEGIN
     prenom, 
     nom, 
     date_naissance, 
-    structure_id, 
     dossier_complet
   ) VALUES (
     jeune_data->>'prenom',
     jeune_data->>'nom',
     (jeune_data->>'date_naissance')::DATE,
-    (jeune_data->>'structure_id')::UUID,
     (jeune_data->>'dossier_complet')::BOOLEAN
   )
   RETURNING to_jsonb(jeunes.*) INTO result;
