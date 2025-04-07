@@ -252,15 +252,19 @@ export class JeuneService {
       // On stocke les dossiers dans la base de données
       const dossiersJson = jeune.dossiers ? JSON.stringify(jeune.dossiers) : null;
       
-      // Créer un objet jeune pour l'insertion avec le champ dossiers maintenant disponible
+      // Créer un objet jeune pour l'insertion - sans le champ dossiers pour l'instant
       const jeuneData = {
         prenom: jeune.prenom,
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
         structure_id: jeune.structure_id,
-        dossier_complet: false,
-        dossiers: jeune.dossiers ? JSON.stringify(jeune.dossiers) : null
+        dossier_complet: false
       };
+      
+      // Journalisation des dossiers pour référence future
+      if (jeune.dossiers && jeune.dossiers.length > 0) {
+        console.log("Dossiers qui seront stockés séparément:", jeune.dossiers);
+      }
       
       console.log("Données à insérer:", jeuneData);
       
