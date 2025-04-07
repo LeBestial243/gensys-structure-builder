@@ -9,6 +9,16 @@ export const STRUCTURE_TYPES = [
 ];
 
 /**
+ * Structures disponibles pour les jeunes
+ */
+export const STRUCTURES_OPTIONS = [
+  { id: 'MECS Paris', label: 'MECS Paris' },
+  { id: 'SISEIP Lyon', label: 'SISEIP Lyon' },
+  { id: 'ITEP Marseille', label: 'ITEP Marseille' },
+  { id: 'Structure par défaut', label: 'Structure par défaut' }
+];
+
+/**
  * Limites disponibles pour le nombre d'utilisateurs par structure
  */
 export const USER_LIMITS = [

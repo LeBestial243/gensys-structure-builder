@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { JeuneService } from "@/services/JeuneService";
 import { StructureService } from "@/services/StructureService";
 import { Jeune, Structure } from "@/types/dashboard";
+import { STRUCTURES_OPTIONS } from "@/constants/structures";
 // Import date-fns
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -97,7 +98,7 @@ const MesJeunes = () => {
     date_naissance: "",
     date_entree: new Date().toISOString().split('T')[0],
     photo: null as File | null,
-    structure_id: currentUser?.structure_id || "",
+    structure_id: STRUCTURES_OPTIONS[0].id, // Utiliser la première structure par défaut
     dossiers: [] as string[],
   });
 
@@ -172,11 +173,9 @@ const MesJeunes = () => {
     setFilteredJeunes(filtered);
   }, [searchQuery, jeunes, activeFilters]);
 
-  // Vérifier si une chaîne est un UUID valide
-  const isValidUUID = (uuid: string) => {
-    if (!uuid) return false;
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(uuid);
+  // Vérifier si le nom de la structure est valide
+  const isValidStructure = (structure: string) => {
+    return !!structure && structure.length >= 2;
   };
 
   // Gérer la soumission du formulaire de nouveau jeune
@@ -200,10 +199,10 @@ const MesJeunes = () => {
       return;
     }
     
-    // Vérifier que la structure ID est un UUID valide
-    if (!isValidUUID(structureId)) {
-      console.error("ID de structure invalide, pas au format UUID");
-      alert("L'ID de structure doit être au format UUID (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)");
+    // Vérifier que la structure est valide
+    if (!isValidStructure(structureId)) {
+      console.error("Nom de structure invalide");
+      alert("Veuillez saisir un nom de structure valide (minimum 2 caractères)");
       return;
     }
     
@@ -621,7 +620,7 @@ const MesJeunes = () => {
               <div className="space-y-2">
                 <label htmlFor="structure_id" className="text-sm font-medium">Structure</label>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Sélectionner une structure existante</label>
+                  <label className="text-sm font-medium">Sélectionner une structure</label>
                   <Select
                     value={newJeune.structure_id}
                     onValueChange={(value) => setNewJeune(prev => ({ ...prev, structure_id: value }))}
@@ -630,37 +629,32 @@ const MesJeunes = () => {
                       <SelectValue placeholder="Sélectionner une structure" />
                     </SelectTrigger>
                     <SelectContent>
-                      {structures.map(structure => (
+                      {STRUCTURES_OPTIONS.map(structure => (
                         <SelectItem key={structure.id} value={structure.id}>
-                          {structure.name} ({structure.type} - {structure.city})
+                          {structure.label}
                         </SelectItem>
                       ))}
-                      {structures.length === 0 && (
-                        <SelectItem value="" disabled>
-                          Aucune structure disponible
-                        </SelectItem>
-                      )}
                     </SelectContent>
                   </Select>
                   
-                  {/* Avancé: saisie manuelle d'un ID */}
+                  {/* Saisie d'une structure personnalisée */}
                   <details className="mt-4">
                     <summary className="text-sm font-medium cursor-pointer">
-                      Avancé: saisir un ID de structure manuellement
+                      Ajouter une structure personnalisée
                     </summary>
                     <div className="mt-2 p-3 border rounded-md bg-gray-50">
                       <Input
                         id="structure_id_manual"
                         name="structure_id_manual"
-                        placeholder="ID de structure (format UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)"
-                        value={!structures.some(s => s.id === newJeune.structure_id) ? newJeune.structure_id : ""}
+                        placeholder="Nom de la structure (ex: MECS Bordeaux)"
+                        value={!STRUCTURES_OPTIONS.some(s => s.id === newJeune.structure_id) ? newJeune.structure_id : ""}
                         onChange={(e) => {
                           console.log("Valeur saisie:", e.target.value);
                           setNewJeune(prev => ({ ...prev, structure_id: e.target.value }));
                         }}
                       />
-                      <p className="text-xs text-red-500 mt-1">
-                        L'ID doit être un UUID valide (ex: 123e4567-e89b-12d3-a456-426614174000)
+                      <p className="text-xs text-gray-500 mt-1">
+                        Entrez le nom de la structure si elle ne figure pas dans la liste
                       </p>
                     </div>
                   </details>
