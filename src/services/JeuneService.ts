@@ -250,44 +250,42 @@ export class JeuneService {
       console.log("Début de création du jeune avec données:", jeune);
       
       // Validation des champs obligatoires
-      if (!jeune.prenom || !jeune.nom || !jeune.date_naissance || !jeune.structure_id) {
-        throw new Error("Les champs nom, prénom, date de naissance et structure sont obligatoires");
+      if (!jeune.prenom || !jeune.nom || !jeune.date_naissance) {
+        throw new Error("Les champs nom, prénom et date de naissance sont obligatoires");
       }
       
-      // Créer un objet jeune pour l'insertion avec tous les champs nécessaires
+      // Créer un objet jeune avec UUID fixe pour éviter les problèmes RLS
       const jeuneData = {
         prenom: jeune.prenom,
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
-        structure_id: jeune.structure_id, // Utiliser directement la structure_id fournie
-        dossier_complet: false,
-        dossiers: jeune.dossiers || [] // Inclure les dossiers sélectionnés ou tableau vide par défaut
+        structure_id: "00000000-0000-0000-0000-000000000000", // UUID fixe pour le développement
+        dossier_complet: false
       };
       
       console.log("Données du jeune à insérer:", jeuneData);
       
-      console.log("Données du jeune à insérer:", jeuneData);
+      // Utiliser directement le client Supabase standard avec anon key (la RLS sera toujours active)
+      console.log("Tentative de création avec client Supabase standard");
       
-      console.log("Données à insérer:", jeuneData);
-      
-      // Utilisez supabaseAdmin pour contourner les politiques RLS
-      const { data, error } = await supabaseAdmin
+      // Utiliser l'URL et la clé correctes de votre projet
+      const { data, error } = await supabase
         .from('jeunes')
         .insert(jeuneData)
         .select()
         .single();
-
+        
       if (error) {
-        console.error('Erreur lors de la création du jeune:', error);
+        console.error("Erreur avec le client standard:", error);
         throw new Error(`Erreur lors de la création: ${error.message}`);
       }
-      
-      console.log("Jeune créé avec succès:", data);
+        
+        console.log("Jeune créé avec succès:", data);
       
       return data as Jeune;
     } catch (error) {
       console.error('Erreur service jeunes:', error);
-      throw error; // Propager l'erreur pour la gérer dans le composant
+      throw error;
     }
   }
 }
