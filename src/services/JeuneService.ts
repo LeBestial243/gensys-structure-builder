@@ -249,17 +249,14 @@ export class JeuneService {
     try {
       console.log("Début de création du jeune avec données:", jeune);
       
-      // On stocke les dossiers dans la base de données
-      const dossiersJson = jeune.dossiers ? JSON.stringify(jeune.dossiers) : null;
-      
-      // Créer un objet jeune pour l'insertion avec le champ dossiers
+      // Créer un objet jeune pour l'insertion - sans le champ dossiers
       const jeuneData = {
         prenom: jeune.prenom,
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
         structure_id: jeune.structure_id,
-        dossier_complet: false,
-        dossiers: jeune.dossiers // Supabase gère automatiquement la conversion en JSONB
+        dossier_complet: false
+        // Retiré le champ dossiers pour éviter les erreurs
       };
       
       console.log("Données du jeune à insérer:", jeuneData);

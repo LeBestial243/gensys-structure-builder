@@ -217,13 +217,13 @@ const MesJeunes = () => {
         structure_id: structureId
       });
       
-      // Créer le nouveau jeune en utilisant l'API
+      // Créer le nouveau jeune en utilisant l'API - temporairement sans les dossiers
       const nouveauJeune = await JeuneService.createJeune({
         prenom: newJeune.prenom,
         nom: newJeune.nom,
         date_naissance: newJeune.date_naissance,
-        structure_id: structureId,
-        dossiers: newJeune.dossiers
+        structure_id: structureId
+        // Nous ne passons pas les dossiers pour l'instant pour éviter l'erreur
       });
       
       if (nouveauJeune) {
