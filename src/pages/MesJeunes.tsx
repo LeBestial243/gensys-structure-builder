@@ -108,7 +108,7 @@ const MesJeunes = () => {
     filters: activeFilters, 
     updateFilter,
     resetFilters,
-    filteredItems: filteredJeunes,
+    filteredItems,
     hasActiveFilters
   } = useFilters(
     {
@@ -139,6 +139,9 @@ const MesJeunes = () => {
       return matchesSearch && matchesTypeDossier && matchesDateEntree && matchesStatus;
     }
   );
+  
+  // Utiliser les jeunes filtrés depuis le hook
+  const filteredJeunes = filteredItems;
 
   // Effectuer la recherche quand le terme change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -268,7 +271,6 @@ const MesJeunes = () => {
       // Rafraîchir la liste des jeunes
       const jeunesData = await JeuneService.getJeunesByStructure(currentUser.structure_id);
       setJeunes(jeunesData);
-      setFilteredJeunes(jeunesData);
     } catch (error) {
       console.error("Erreur lors de la création du jeune:", error);
     } finally {
