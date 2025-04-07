@@ -140,8 +140,10 @@ const MesJeunes = () => {
     }
   );
   
-  // Utiliser les jeunes filtrés depuis le hook
-  const filteredJeunes = filteredItems;
+  // Utiliser les résultats filtrés du hook pour mettre à jour notre state
+  useEffect(() => {
+    setFilteredJeunes(filteredItems);
+  }, [filteredItems]);
 
   // Effectuer la recherche quand le terme change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,6 +162,7 @@ const MesJeunes = () => {
       try {
         const jeunesData = await JeuneService.getJeunesByStructure(currentUser.structure_id);
         setJeunes(jeunesData);
+        setFilteredJeunes(jeunesData);
       } catch (error) {
         console.error("Erreur lors de la récupération des jeunes:", error);
       } finally {

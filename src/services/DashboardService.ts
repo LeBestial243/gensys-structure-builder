@@ -18,7 +18,7 @@ export class DashboardService {
    * @param structureId ID de la structure
    * @returns Informations de la structure
    */
-  static async getStructureInfo(structureId: string): Promise<Structure> {
+  static async getStructureInfo(structureId: string): Promise<Structure | null> {
     try {
       const { data, error } = await supabase
         .from('structures')
@@ -28,13 +28,21 @@ export class DashboardService {
 
       if (error) {
         console.error('Erreur lors de la récupération de la structure:', error);
+        
+        // Vérifier si l'erreur est due à l'absence de structure
+        if (error.code === 'PGRST116') {
+          console.log('Aucune structure trouvée avec cet ID, création d\'une structure par défaut');
+          // Ici, vous pourriez appeler StructureService.createDefaultStructureIfNoneExist()
+          return null;
+        }
+        
         throw new Error(`Erreur lors de la récupération de la structure: ${error.message}`);
       }
 
       return data as Structure;
     } catch (error) {
       console.error('Erreur service dashboard:', error);
-      throw error; // Propager l'erreur pour la gérer dans le composant
+      return null;
     }
   }
 
