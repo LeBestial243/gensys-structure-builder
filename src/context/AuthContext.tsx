@@ -49,16 +49,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Function to refresh user data
   const refreshUser = async () => {
     try {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData?.user) {
+        // Vérifier si le token est proche de l'expiration
+        const session = await supabase.auth.getSession();
+        const expiresAt = session?.data?.session?.expires_at;
+        const isExpiringSoon = expiresAt && (new Date(expiresAt * 1000).getTime() - Date.now()) < 10 * 60 * 1000; // 10 minutes
+        
+        // Rafraîchir le token si nécessaire
+        if (isExpiringSoon) {
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) {
+            console.warn("Session refresh failed:", refreshError);
+          } else {
+            console.log("Session refreshed successfully", refreshData);
+          }
+        }
+        
         const userData: User = {
-          id: data.user.id,
-          email: data.user.email || "",
-          role: (data.user.user_metadata?.role as "user" | "admin" | "super_admin" | "educateur") || "user",
-          name: data.user.user_metadata?.first_name 
-            ? `${data.user.user_metadata.first_name} ${data.user.user_metadata.last_name || ""}`
+          id: authData.user.id,
+          email: authData.user.email || "",
+          role: (authData.user.user_metadata?.role as "user" | "admin" | "super_admin" | "educateur") || "user",
+          name: authData.user.user_metadata?.first_name 
+            ? `${authData.user.user_metadata.first_name} ${authData.user.user_metadata.last_name || ""}`
             : undefined,
-          structure_id: data.user.user_metadata?.structure_id,
+          structure_id: authData.user.user_metadata?.structure_id,
         };
         setCurrentUser(userData);
       } else {

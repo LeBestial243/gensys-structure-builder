@@ -5,6 +5,7 @@ import { JeuneService } from "@/services/JeuneService";
 import { StructureService } from "@/services/StructureService";
 import { Jeune, Structure } from "@/types/dashboard";
 import { STRUCTURES_OPTIONS } from "@/constants/structures";
+import { useFilters } from "@/hooks/use-filters";
 // Import date-fns
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -102,12 +103,49 @@ const MesJeunes = () => {
     dossiers: [] as string[],
   });
 
-  // État pour le filtrage
-  const [activeFilters, setActiveFilters] = useState({
-    typeDossier: "",
-    dateEntree: "",
-    status: "",
-  });
+  // Utilisation du hook personnalisé pour gérer les filtres
+  const { 
+    filters: activeFilters, 
+    updateFilter,
+    resetFilters,
+    filteredItems: filteredJeunes,
+    hasActiveFilters
+  } = useFilters(
+    {
+      search: "",
+      typeDossier: "",
+      dateEntree: "",
+      status: ""
+    },
+    jeunes,
+    (jeune, filters) => {
+      // Filtrer par recherche texte
+      const matchesSearch = !filters.search || 
+        `${jeune.prenom} ${jeune.nom}`.toLowerCase().includes(filters.search.toLowerCase());
+      
+      // Filtrer par type de dossier
+      const matchesTypeDossier = !filters.typeDossier || 
+        (jeune.dossiers && Array.isArray(jeune.dossiers) && 
+        jeune.dossiers.includes(filters.typeDossier));
+      
+      // Filtrer par date d'entrée
+      const matchesDateEntree = !filters.dateEntree ||
+        new Date(jeune.created_at).toISOString().split('T')[0] === filters.dateEntree;
+      
+      // Filtrer par statut
+      const matchesStatus = !filters.status || 
+        (filters.status === 'complet' ? jeune.dossier_complet : !jeune.dossier_complet);
+      
+      return matchesSearch && matchesTypeDossier && matchesDateEntree && matchesStatus;
+    }
+  );
+
+  // Effectuer la recherche quand le terme change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    updateFilter('search', value);
+  };
 
   useEffect(() => {
     const fetchJeunes = async () => {
@@ -119,7 +157,6 @@ const MesJeunes = () => {
       try {
         const jeunesData = await JeuneService.getJeunesByStructure(currentUser.structure_id);
         setJeunes(jeunesData);
-        setFilteredJeunes(jeunesData);
       } catch (error) {
         console.error("Erreur lors de la récupération des jeunes:", error);
       } finally {
@@ -153,25 +190,6 @@ const MesJeunes = () => {
     
     fetchStructures();
   }, []);
-
-  // Filtrage des jeunes selon la recherche
-  useEffect(() => {
-    if (!searchQuery.trim() && !activeFilters.typeDossier && !activeFilters.dateEntree && !activeFilters.status) {
-      setFilteredJeunes(jeunes);
-      return;
-    }
-
-    const filtered = jeunes.filter((jeune) => {
-      const matchesSearch = searchQuery.trim() === "" || 
-        `${jeune.prenom} ${jeune.nom}`.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      // Appliquer d'autres filtres ici quand ils seront implémentés
-      
-      return matchesSearch;
-    });
-
-    setFilteredJeunes(filtered);
-  }, [searchQuery, jeunes, activeFilters]);
 
   // Vérifier si le nom de la structure est valide
   const isValidStructure = (structure: string) => {
@@ -333,14 +351,23 @@ const MesJeunes = () => {
             placeholder="Rechercher par nom, prénom..." 
             className="pl-10"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
           />
         </div>
         
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <Button variant="outline" className="gap-2">
+          <Button 
+            variant="outline" 
+            className={`gap-2 ${hasActiveFilters ? 'bg-blue-50 border-blue-300 text-blue-600' : ''}`}
+            onClick={() => {
+              // TODO: Implémenter un modal ou dropdown de filtres avancés
+              if (hasActiveFilters) {
+                resetFilters();
+              }
+            }}
+          >
             <Filter size={16} />
-            Filtres
+            {hasActiveFilters ? 'Réinitialiser filtres' : 'Filtres'}
           </Button>
           
           <Button className="gap-2" onClick={() => setShowAddModal(true)}>
@@ -367,9 +394,7 @@ const MesJeunes = () => {
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">
-                  <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-                  </div>
+                  <Loading centered text="Chargement des jeunes..." />
                 </TableCell>
               </TableRow>
             ) : filteredJeunes.length === 0 ? (

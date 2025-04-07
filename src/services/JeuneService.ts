@@ -249,25 +249,44 @@ export class JeuneService {
     try {
       console.log("Début de création du jeune avec données:", jeune);
       
-      // Générer un UUID valide basé sur le nom de la structure
-      function generateUUID() {
+      // Générer un UUID valide basé sur le nom de la structure ou un paramètre
+      function generateUUID(seed?: string) {
+        // Si on a une graine, on l'utilise pour générer un UUID déterministe
+        if (seed) {
+          let hash = 0;
+          for (let i = 0; i < seed.length; i++) {
+            hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+            hash |= 0; // Convertir en entier 32 bits
+          }
+          
+          // Utiliser le hash pour générer un UUID qui sera toujours le même pour la même graine
+          const seedHex = Math.abs(hash).toString(16).padStart(8, '0');
+          return `${seedHex.slice(0, 8)}-${seedHex.slice(0, 4)}-4${seedHex.slice(0, 3)}-8${seedHex.slice(0, 3)}-${seedHex.padStart(12, '0')}`;
+        }
+        
+        // Sinon on génère un UUID aléatoire
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
           const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
           return v.toString(16);
         });
       }
       
-      // Utiliser la structure fixe ou générer un UUID
-      const structureUUID = "123e4567-e89b-12d3-a456-426614174000"; // UUID fixe pour toutes les structures
+      // Générer un UUID basé sur le nom de la structure ou utiliser celui fourni si c'est déjà un UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const structureUUID = uuidRegex.test(jeune.structure_id) 
+        ? jeune.structure_id 
+        : generateUUID(jeune.structure_id); // Générer un UUID déterministe basé sur le nom
       
-      // Créer un objet jeune pour l'insertion - sans le champ dossiers
+      console.log("UUID de structure utilisé:", structureUUID);
+      
+      // Créer un objet jeune pour l'insertion avec le champ dossiers
       const jeuneData = {
         prenom: jeune.prenom,
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
-        structure_id: structureUUID, // Utiliser l'UUID généré au lieu du nom
-        dossier_complet: false
-        // Retiré le champ dossiers pour éviter les erreurs
+        structure_id: structureUUID,
+        dossier_complet: false,
+        dossiers: jeune.dossiers // Inclure les dossiers sélectionnés
       };
       
       console.log("Données du jeune à insérer:", jeuneData);
