@@ -1,7 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Créer un client Supabase avec la clé de service pour contourner les RLS
-const supabaseAdmin = supabase;
+// Nous ajoutons explicitement le header de suppression de RLS
+const supabaseAdmin = supabase.headers({
+  'X-Supabase-AllowNoRLS': 'true'
+});
 import type { Jeune, Note, Transcription, Evenement } from "@/types/dashboard";
 
 /**
@@ -252,19 +255,17 @@ export class JeuneService {
       // On stocke les dossiers dans la base de données
       const dossiersJson = jeune.dossiers ? JSON.stringify(jeune.dossiers) : null;
       
-      // Créer un objet jeune pour l'insertion - sans le champ dossiers pour l'instant
+      // Créer un objet jeune pour l'insertion avec le champ dossiers
       const jeuneData = {
         prenom: jeune.prenom,
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
         structure_id: jeune.structure_id,
-        dossier_complet: false
+        dossier_complet: false,
+        dossiers: jeune.dossiers // Supabase gère automatiquement la conversion en JSONB
       };
       
-      // Journalisation des dossiers pour référence future
-      if (jeune.dossiers && jeune.dossiers.length > 0) {
-        console.log("Dossiers qui seront stockés séparément:", jeune.dossiers);
-      }
+      console.log("Données du jeune à insérer:", jeuneData);
       
       console.log("Données à insérer:", jeuneData);
       

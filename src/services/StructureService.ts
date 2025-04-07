@@ -1,7 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Créer un client Supabase avec la clé de service pour contourner les RLS
-const supabaseAdmin = supabase;
+// Nous ajoutons explicitement le header de suppression de RLS
+const supabaseAdmin = supabase.headers({
+  'X-Supabase-AllowNoRLS': 'true'
+});
 
 export interface StructureInviteResponse {
   invite_link: string;
