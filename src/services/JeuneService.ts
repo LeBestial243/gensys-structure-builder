@@ -1,10 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
-// Créer un client Supabase avec la clé de service pour contourner les RLS
-// Nous ajoutons explicitement le header de suppression de RLS
-const supabaseAdmin = supabase.headers({
-  'X-Supabase-AllowNoRLS': 'true'
-});
+// Utiliser le client Supabase standard - suppression des headers spéciaux qui causent des problèmes
+const supabaseAdmin = supabase;
 import type { Jeune, Note, Transcription, Evenement } from "@/types/dashboard";
 
 /**
