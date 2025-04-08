@@ -222,14 +222,15 @@ const MesJeunes = () => {
       });
       
       // Appel direct à Supabase pour déboguer
+      // Comme la colonne dossiers pose problème, on l'enlève temporairement
       const { data, error } = await supabase
         .from('jeunes')
         .insert({
           prenom: newJeune.prenom,
           nom: newJeune.nom,
           date_naissance: newJeune.date_naissance,
-          structure_manuelle: newJeune.structure_manuelle || null,
-          dossiers: newJeune.dossiers.length > 0 ? newJeune.dossiers : null
+          structure_manuelle: newJeune.structure_manuelle || null
+          // On a retiré dossiers car il y a un problème avec cette colonne
         })
         .select()
         .single();
