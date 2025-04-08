@@ -252,34 +252,40 @@ export class JeuneService {
         throw new Error("Les champs nom, prénom et date de naissance sont obligatoires");
       }
       
-      // Créer un objet jeune
+      // Créer un objet jeune simplifié, sans structure_id
       const jeuneData = {
         prenom: jeune.prenom,
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
         structure_manuelle: jeune.structure_manuelle || null,
-        dossiers: jeune.dossiers || [],
-        dossier_complet: false
+        dossier_complet: false,
+        dossiers: jeune.dossiers || null
       };
       
       console.log("Données du jeune à insérer:", jeuneData);
       
-      // Utiliser directement le client Supabase standard avec anon key (la RLS sera toujours active)
-      console.log("Tentative de création avec client Supabase standard");
+      // Utiliser directement le client Supabase avec méthode simplifiée
+      console.log("Tentative de création avec méthode simplifiée");
       
-      // Utiliser l'URL et la clé correctes de votre projet
+      // Deux options pour insérer :
+      // 1. Insertion directe (plus simple)
       const { data, error } = await supabase
         .from('jeunes')
         .insert(jeuneData)
         .select()
         .single();
+      
+      // 2. Alternative: utiliser une fonction RPC si elle est définie
+      // const { data, error } = await supabase.rpc('create_jeune_without_structure', {
+      //   jeune_data: jeuneData
+      // });
         
       if (error) {
-        console.error("Erreur avec le client standard:", error);
+        console.error("Erreur lors de la création:", error);
         throw new Error(`Erreur lors de la création: ${error.message}`);
       }
         
-        console.log("Jeune créé avec succès:", data);
+      console.log("Jeune créé avec succès:", data);
       
       return data as Jeune;
     } catch (error) {

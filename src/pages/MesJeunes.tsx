@@ -222,16 +222,24 @@ const MesJeunes = () => {
       });
       
       // Appel direct à Supabase pour déboguer
-      // Comme la colonne dossiers pose problème, on l'enlève temporairement
+      // Option 1: Utiliser l'insertion directe
+      const jeuneData = {
+        prenom: newJeune.prenom,
+        nom: newJeune.nom,
+        date_naissance: newJeune.date_naissance,
+        structure_manuelle: newJeune.structure_manuelle || null,
+        dossiers: newJeune.dossiers.length > 0 ? newJeune.dossiers : null
+      };
+      
+      // Option 2: Utiliser la fonction RPC (décommenter si la fonction est activée sur Supabase)
+      // const { data, error } = await supabase.rpc('create_jeune_without_structure', {
+      //   jeune_data: jeuneData
+      // });
+      
+      // Pour l'instant, utilisons l'insertion directe
       const { data, error } = await supabase
         .from('jeunes')
-        .insert({
-          prenom: newJeune.prenom,
-          nom: newJeune.nom,
-          date_naissance: newJeune.date_naissance,
-          structure_manuelle: newJeune.structure_manuelle || null
-          // On a retiré dossiers car il y a un problème avec cette colonne
-        })
+        .insert(jeuneData)
         .select()
         .single();
       
