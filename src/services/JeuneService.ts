@@ -267,18 +267,30 @@ export class JeuneService {
       // Utiliser directement le client Supabase avec méthode simplifiée
       console.log("Tentative de création avec méthode simplifiée");
       
-      // Deux options pour insérer :
-      // 1. Insertion directe (plus simple)
-      const { data, error } = await supabase
-        .from('jeunes')
-        .insert(jeuneData)
-        .select()
-        .single();
+      // Utiliser la fonction RPC si disponible, sinon fallback sur l'insertion directe
+      let data, error;
       
-      // 2. Alternative: utiliser une fonction RPC si elle est définie
-      // const { data, error } = await supabase.rpc('create_jeune_without_structure', {
-      //   jeune_data: jeuneData
-      // });
+      try {
+        // 1. Essayer la fonction RPC d'abord (meilleure option)
+        const rpcResult = await supabase.rpc('create_jeune_without_structure', {
+          jeune_data: jeuneData
+        });
+        
+        data = rpcResult.data;
+        error = rpcResult.error;
+      } catch (rpcError) {
+        console.log("Fonction RPC non disponible, utilisation de l'insertion directe", rpcError);
+        
+        // 2. Fallback: Insertion directe
+        const insertResult = await supabase
+          .from('jeunes')
+          .insert(jeuneData)
+          .select()
+          .single();
+          
+        data = insertResult.data;
+        error = insertResult.error;
+      }
         
       if (error) {
         console.error("Erreur lors de la création:", error);

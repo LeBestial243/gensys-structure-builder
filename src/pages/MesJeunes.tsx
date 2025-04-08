@@ -231,17 +231,35 @@ const MesJeunes = () => {
         dossiers: newJeune.dossiers.length > 0 ? newJeune.dossiers : null
       };
       
-      // Option 2: Utiliser la fonction RPC (décommenter si la fonction est activée sur Supabase)
-      // const { data, error } = await supabase.rpc('create_jeune_without_structure', {
-      //   jeune_data: jeuneData
-      // });
+      // Essayer d'abord la fonction RPC, puis fallback sur l'insertion directe
+      let data, error;
       
-      // Pour l'instant, utilisons l'insertion directe
-      const { data, error } = await supabase
-        .from('jeunes')
-        .insert(jeuneData)
-        .select()
-        .single();
+      try {
+        // Essayer la fonction RPC d'abord
+        console.log("Tentative avec RPC create_jeune_without_structure");
+        const rpcResult = await supabase.rpc('create_jeune_without_structure', {
+          jeune_data: jeuneData
+        });
+        
+        data = rpcResult.data;
+        error = rpcResult.error;
+        
+        if (error) {
+          throw new Error("Fonction RPC a échoué: " + error.message);
+        }
+      } catch (rpcError) {
+        console.log("Fonction RPC non disponible, utilisation de l'insertion directe", rpcError);
+        
+        // Fallback: Insertion directe
+        const insertResult = await supabase
+          .from('jeunes')
+          .insert(jeuneData)
+          .select()
+          .single();
+          
+        data = insertResult.data;
+        error = insertResult.error;
+      }
       
       if (error) {
         console.error("Erreur Supabase:", error);
