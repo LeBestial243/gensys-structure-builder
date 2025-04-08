@@ -6,6 +6,7 @@ import { StructureService } from "@/services/StructureService";
 import { Jeune, Structure } from "@/types/dashboard";
 import { STRUCTURES_OPTIONS } from "@/constants/structures";
 import { useFilters } from "@/hooks/use-filters";
+import { supabase } from "@/integrations/supabase/client";
 // Import date-fns
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -199,10 +200,9 @@ const MesJeunes = () => {
     return regex.test(uuid);
   }
 
-  // Gérer la soumission du formulaire de nouveau jeune
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Soumission du formulaire");
+  // Méthode de création alternative plus directe
+  const createJeuneDirectement = async () => {
+    console.log("Méthode alternative - Création du jeune");
     
     // Vérifier d'abord tous les champs requis
     if (!newJeune.prenom || !newJeune.nom || !newJeune.date_naissance) {
@@ -213,10 +213,7 @@ const MesJeunes = () => {
     
     try {
       setIsLoading(true);
-      
-      // Créer le jeune avec les données du formulaire (sans structure_id)
-      // Inclure structure_manuelle et dossiers
-      const nouveauJeune = await JeuneService.createJeune({
+      console.log("Données à envoyer:", {
         prenom: newJeune.prenom,
         nom: newJeune.nom,
         date_naissance: newJeune.date_naissance,
@@ -224,7 +221,27 @@ const MesJeunes = () => {
         dossiers: newJeune.dossiers
       });
       
-      console.log("Jeune créé avec succès:", nouveauJeune);
+      // Appel direct à Supabase pour déboguer
+      const { data, error } = await supabase
+        .from('jeunes')
+        .insert({
+          prenom: newJeune.prenom,
+          nom: newJeune.nom,
+          date_naissance: newJeune.date_naissance,
+          structure_manuelle: newJeune.structure_manuelle || null,
+          dossiers: newJeune.dossiers.length > 0 ? newJeune.dossiers : null
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Erreur Supabase:", error);
+        alert("Erreur lors de la création: " + error.message);
+        return;
+      }
+      
+      console.log("Jeune créé avec succès:", data);
+      alert("Jeune créé avec succès!");
       
       // Fermer le modal
       setShowAddModal(false);
@@ -239,8 +256,10 @@ const MesJeunes = () => {
         photo: null,
         dossiers: [],
       });
+      
       // Conserver uniquement les types de dossiers par défaut
       setTypesOptions(typesOptionsInitiaux);
+      
       // Réinitialiser le champ de nouveau dossier
       setNouveauDossier("");
       
@@ -248,10 +267,20 @@ const MesJeunes = () => {
       const jeunesData = await JeuneService.getAllJeunes();
       setJeunes(jeunesData);
     } catch (error) {
-      console.error("Erreur lors de la création du jeune:", error);
+      console.error("Exception non gérée:", error);
+      alert("Exception non gérée: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Gérer la soumission du formulaire de nouveau jeune
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Soumission du formulaire");
+    
+    // On utilise la méthode alternative
+    await createJeuneDirectement();
   };
 
   // Gérer les changements dans le formulaire
@@ -517,7 +546,7 @@ const MesJeunes = () => {
             <DialogTitle>Ajouter un nouveau jeune</DialogTitle>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit} className="space-y-6 py-4">
+          <form className="space-y-6 py-4">
             <div className="flex flex-col items-center mb-6">
               <div className="relative h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden mb-2">
                 {newJeune.photo ? (
@@ -646,9 +675,12 @@ const MesJeunes = () => {
               <DialogClose asChild>
                 <Button type="button" variant="outline">Annuler</Button>
               </DialogClose>
+              {/* Utilisons un bouton de type button pour contourner les problèmes de soumission de formulaire */}
               <Button 
-                type="submit" 
+                type="button" 
+                onClick={createJeuneDirectement}
                 disabled={isLoading}
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 {isLoading ? (
                   <>
