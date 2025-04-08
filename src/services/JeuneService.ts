@@ -241,6 +241,7 @@ export class JeuneService {
     prenom: string;
     nom: string;
     date_naissance: string;
+    structure_manuelle?: string;
     dossiers?: string[];
   }): Promise<Jeune | null> {
     try {
@@ -256,6 +257,8 @@ export class JeuneService {
         prenom: jeune.prenom,
         nom: jeune.nom,
         date_naissance: jeune.date_naissance,
+        structure_manuelle: jeune.structure_manuelle || null,
+        dossiers: jeune.dossiers || [],
         dossier_complet: false
       };
       

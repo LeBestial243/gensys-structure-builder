@@ -99,6 +99,7 @@ const MesJeunes = () => {
     nom: "",
     date_naissance: "",
     date_entree: new Date().toISOString().split('T')[0],
+    structure_manuelle: "",
     photo: null as File | null,
     dossiers: [] as string[],
   });
@@ -214,11 +215,16 @@ const MesJeunes = () => {
       setIsLoading(true);
       
       // Créer le jeune avec les données du formulaire (sans structure_id)
+      // Inclure structure_manuelle et dossiers
       const nouveauJeune = await JeuneService.createJeune({
         prenom: newJeune.prenom,
         nom: newJeune.nom,
-        date_naissance: newJeune.date_naissance
+        date_naissance: newJeune.date_naissance,
+        structure_manuelle: newJeune.structure_manuelle,
+        dossiers: newJeune.dossiers
       });
+      
+      console.log("Jeune créé avec succès:", nouveauJeune);
       
       // Fermer le modal
       setShowAddModal(false);
@@ -229,6 +235,7 @@ const MesJeunes = () => {
         nom: "",
         date_naissance: "",
         date_entree: new Date().toISOString().split('T')[0],
+        structure_manuelle: "",
         photo: null,
         dossiers: [],
       });
@@ -357,6 +364,7 @@ const MesJeunes = () => {
               <TableHead>Nom et prénom</TableHead>
               <TableHead>Date de naissance</TableHead>
               <TableHead>Date d'entrée</TableHead>
+              <TableHead>Structure</TableHead>
               <TableHead>Dossiers</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -364,13 +372,13 @@ const MesJeunes = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
+                <TableCell colSpan={7} className="text-center py-8">
                   <Loading centered text="Chargement des jeunes..." />
                 </TableCell>
               </TableRow>
             ) : filteredJeunes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                   Aucun jeune trouvé
                 </TableCell>
               </TableRow>
@@ -389,9 +397,19 @@ const MesJeunes = () => {
                   <TableCell>{formatDate(jeune.date_naissance)}</TableCell>
                   <TableCell>{formatDate(jeune.created_at)}</TableCell>
                   <TableCell>
+                    {jeune.structure_manuelle || "-"}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      <Badge variant="secondary" className="cursor-pointer">Administratif</Badge>
-                      <Badge variant="secondary" className="cursor-pointer">Éducatif</Badge>
+                      {jeune.dossiers && jeune.dossiers.map(dossier => (
+                        <Badge key={dossier} variant="secondary" className="cursor-pointer">{dossier}</Badge>
+                      ))}
+                      {(!jeune.dossiers || jeune.dossiers.length === 0) && (
+                        <>
+                          <Badge variant="secondary" className="cursor-pointer">Administratif</Badge>
+                          <Badge variant="secondary" className="cursor-pointer">Éducatif</Badge>
+                        </>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
@@ -566,6 +584,17 @@ const MesJeunes = () => {
                   onChange={handleInputChange}
                   required
                 />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label htmlFor="structure_manuelle" className="text-sm font-medium">Structure manuelle</label>
+                <Input 
+                  id="structure_manuelle" 
+                  name="structure_manuelle"
+                  placeholder="Entrez le nom de la structure..."
+                  value={newJeune.structure_manuelle}
+                  onChange={handleInputChange}
+                />
+                <p className="text-xs text-gray-500">Facultatif: saisissez manuellement le nom de la structure si elle n'est pas dans la liste.</p>
               </div>
             </div>
             

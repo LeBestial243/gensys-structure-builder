@@ -19,8 +19,10 @@ export interface Jeune {
   nom: string;
   date_naissance: string;
   structure_id?: string | null;
+  structure_manuelle?: string;
   dossier_complet: boolean;
   created_at: string;
+  dossiers?: string[];
 }
 
 // Note éducative
