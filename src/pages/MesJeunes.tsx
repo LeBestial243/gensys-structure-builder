@@ -158,7 +158,7 @@ const MesJeunes = () => {
     const fetchJeunes = async () => {
       try {
         setIsLoading(true);
-        const jeunesData = await JeuneService.getAllJeunes();
+        const jeunesData = await JeuneService.getAllJeunes(currentUser?.role);
         setJeunes(jeunesData);
         setFilteredJeunes(jeunesData);
       } catch (error) {

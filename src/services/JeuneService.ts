@@ -1,7 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-
-// Utiliser le client Supabase standard - suppression des headers spéciaux qui causent des problèmes
-const supabaseAdmin = supabase;
+import { supabaseAdmin } from "@/integrations/supabase/adminClient";
+import { getClient } from "@/utils/supabaseClient";
 import type { Jeune, Note, Transcription, Evenement } from "@/types/dashboard";
 
 /**
@@ -12,10 +11,12 @@ export class JeuneService {
    * Récupère la liste des jeunes 
    * @returns Liste des jeunes
    */
-  static async getAllJeunes(): Promise<Jeune[]> {
+  static async getAllJeunes(userRole?: string): Promise<Jeune[]> {
     try {
-      // Utilisez supabaseAdmin pour contourner les politiques RLS
-      const { data, error } = await supabaseAdmin
+      // Utilisez le client approprié en fonction du rôle
+      const client = getClient(userRole);
+      
+      const { data, error } = await client
         .from('jeunes')
         .select('*')
         .order('nom', { ascending: true });

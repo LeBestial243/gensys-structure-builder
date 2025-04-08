@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { supabaseAdmin } from "@/integrations/supabase/adminClient";
+import { getClient } from "@/utils/supabaseClient";
 import { Educateur, EducateurRole, EducateurMode } from "@/types/educateurs";
 
 /**
@@ -10,9 +12,12 @@ export class EducateurService {
    * @returns Liste des éducateurs
    * @throws Error en cas d'échec de la requête
    */
-  static async getEducateurs(): Promise<Educateur[]> {
+  static async getEducateurs(userRole?: string): Promise<Educateur[]> {
     try {
-      const { data, error } = await supabase
+      // Utilisez le client approprié en fonction du rôle
+      const client = getClient(userRole);
+      
+      const { data, error } = await client
         .from('educateurs')
         .select('*')
         .order('created_at', { ascending: false });

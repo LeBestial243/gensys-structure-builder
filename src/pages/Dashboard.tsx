@@ -48,21 +48,21 @@ const Dashboard = () => {
   // Récupérer les statistiques du dashboard
   const { data: stats } = useQuery<DashboardStats>({
     queryKey: ["dashboard-stats"],
-    queryFn: () => DashboardService.getStats(),
+    queryFn: () => DashboardService.getStats(currentUser?.role),
     enabled: true,
   });
 
   // Récupérer les événements à venir
   const { data: evenements = [] } = useQuery<Evenement[]>({
     queryKey: ["evenements"],
-    queryFn: () => DashboardService.getEvenements(7),
+    queryFn: () => DashboardService.getEvenements(7, currentUser?.role),
     enabled: true,
   });
 
   // Récupérer les alertes
   const { data: alertes = [] } = useQuery<Alerte[]>({
     queryKey: ["alertes"],
-    queryFn: () => DashboardService.getAlertes(),
+    queryFn: () => DashboardService.getAlertes(currentUser?.role),
     enabled: true,
   });
 

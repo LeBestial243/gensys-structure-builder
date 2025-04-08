@@ -1,7 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-
-// Utiliser le client Supabase standard
-const supabaseAdmin = supabase;
+import { supabaseAdmin } from "@/integrations/supabase/adminClient";
+import { getClient } from "@/utils/supabaseClient";
 
 export interface StructureInviteResponse {
   invite_link: string;

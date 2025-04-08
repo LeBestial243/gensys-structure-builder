@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { supabaseAdmin } from "@/integrations/supabase/adminClient";
+import { getClient } from "@/utils/supabaseClient";
 import type { 
   DashboardStats, 
   Structure, 
@@ -50,10 +52,13 @@ export class DashboardService {
    * Récupère les statistiques pour le dashboard
    * @returns Statistiques du dashboard
    */
-  static async getStats(): Promise<DashboardStats> {
+  static async getStats(userRole?: string): Promise<DashboardStats> {
     try {
+      // Utilisez le client approprié en fonction du rôle
+      const client = getClient(userRole);
+      
       // Récupérer le nombre de jeunes (sans filtrer par structure)
-      const { count: nombreJeunes = 0, error: jeunesError } = await supabase
+      const { count: nombreJeunes = 0, error: jeunesError } = await client
         .from('jeunes')
         .select('id', { count: 'exact', head: true });
 
@@ -64,7 +69,7 @@ export class DashboardService {
 
       // Récupérer le nombre de notes de cette année
       const debutAnnee = new Date(new Date().getFullYear(), 0, 1).toISOString();
-      const { count: nombreNotes = 0, error: notesError } = await supabase
+      const { count: nombreNotes = 0, error: notesError } = await client
         .from('notes')
         .select('id', { count: 'exact', head: true })
         .gte('date_creation', debutAnnee);
@@ -94,14 +99,17 @@ export class DashboardService {
    * @param jours Nombre de jours à prendre en compte (défaut: 7)
    * @returns Liste des événements
    */
-  static async getEvenements(jours = 7): Promise<Evenement[]> {
+  static async getEvenements(jours = 7, userRole?: string): Promise<Evenement[]> {
     try {
+      // Utilisez le client approprié en fonction du rôle
+      const client = getClient(userRole);
+      
       const dateActuelle = new Date().toISOString();
       const dateFin = new Date();
       dateFin.setDate(dateFin.getDate() + jours);
       const dateFuture = dateFin.toISOString();
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('evenements')
         .select('*, jeunes(prenom, nom)')
         .gte('date', dateActuelle)
@@ -124,12 +132,15 @@ export class DashboardService {
    * Récupère les alertes 
    * @returns Liste des alertes
    */
-  static async getAlertes(): Promise<Alerte[]> {
+  static async getAlertes(userRole?: string): Promise<Alerte[]> {
     const alertes: Alerte[] = [];
     
     try {
+      // Utilisez le client approprié en fonction du rôle
+      const client = getClient(userRole);
+      
       // 1. Récupérer les transcriptions non validées
-      const { data: transcriptions, error: transcriptionsError } = await supabase
+      const { data: transcriptions, error: transcriptionsError } = await client
         .from('transcriptions')
         .select('*, jeunes(prenom, nom)')
         .eq('validee', false);
@@ -160,7 +171,7 @@ export class DashboardService {
       }
 
       // 2. Récupérer les dossiers incomplets
-      const { data: jeunes, error: jeunesError } = await supabase
+      const { data: jeunes, error: jeunesError } = await client
         .from('jeunes')
         .select('*')
         .eq('dossier_complet', false);
@@ -185,7 +196,7 @@ export class DashboardService {
       }
 
       // 3. Récupérer les notes à générer avant échéance
-      const { data: evenements, error: evenementsError } = await supabase
+      const { data: evenements, error: evenementsError } = await client
         .from('evenements')
         .select('*, jeunes(prenom, nom)')
         .eq('type', 'echeance')
@@ -197,7 +208,7 @@ export class DashboardService {
       } else if (evenements) {
         // Vérifier pour chaque échéance s'il existe une note
         for (const evt of evenements) {
-          const { count, error: noteError } = await supabase
+          const { count, error: noteError } = await client
             .from('notes')
             .select('id', { count: 'exact', head: true })
             .eq('jeune_id', evt.jeune_id)
