@@ -6,17 +6,15 @@ import { Educateur, EducateurRole, EducateurMode } from "@/types/educateurs";
  */
 export class EducateurService {
   /**
-   * Récupère tous les éducateurs d'une structure
-   * @param structureId ID de la structure
+   * Récupère tous les éducateurs
    * @returns Liste des éducateurs
    * @throws Error en cas d'échec de la requête
    */
-  static async getEducateurs(structureId: string): Promise<Educateur[]> {
+  static async getEducateurs(): Promise<Educateur[]> {
     try {
       const { data, error } = await supabase
         .from('educateurs')
         .select('*')
-        .eq('structure_id', structureId)
         .order('created_at', { ascending: false });
 
       if (error) {

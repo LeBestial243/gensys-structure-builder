@@ -48,10 +48,9 @@ export class DashboardService {
 
   /**
    * Récupère les statistiques pour le dashboard
-   * @param structureId ID de la structure
    * @returns Statistiques du dashboard
    */
-  static async getStats(structureId: string): Promise<DashboardStats> {
+  static async getStats(): Promise<DashboardStats> {
     try {
       // Récupérer le nombre de jeunes (sans filtrer par structure)
       const { count: nombreJeunes = 0, error: jeunesError } = await supabase
@@ -68,7 +67,6 @@ export class DashboardService {
       const { count: nombreNotes = 0, error: notesError } = await supabase
         .from('notes')
         .select('id', { count: 'exact', head: true })
-        .eq('structure_id', structureId)
         .gte('date_creation', debutAnnee);
 
       if (notesError) {
@@ -77,7 +75,7 @@ export class DashboardService {
       }
 
       // Calculer le nombre d'alertes
-      const alertes = await this.getAlertes(structureId);
+      const alertes = await this.getAlertes();
       const nombreAlertes = alertes.length;
 
       return {
@@ -92,12 +90,11 @@ export class DashboardService {
   }
 
   /**
-   * Récupère les événements à venir pour une structure
-   * @param structureId ID de la structure
+   * Récupère les événements à venir 
    * @param jours Nombre de jours à prendre en compte (défaut: 7)
    * @returns Liste des événements
    */
-  static async getEvenements(structureId: string, jours = 7): Promise<Evenement[]> {
+  static async getEvenements(jours = 7): Promise<Evenement[]> {
     try {
       const dateActuelle = new Date().toISOString();
       const dateFin = new Date();
@@ -124,11 +121,10 @@ export class DashboardService {
   }
 
   /**
-   * Récupère les alertes pour une structure
-   * @param structureId ID de la structure
+   * Récupère les alertes 
    * @returns Liste des alertes
    */
-  static async getAlertes(structureId: string): Promise<Alerte[]> {
+  static async getAlertes(): Promise<Alerte[]> {
     const alertes: Alerte[] = [];
     
     try {

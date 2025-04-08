@@ -21,14 +21,10 @@ const Educateurs = () => {
           return;
         }
 
+        // Récupérer tous les éducateurs sans filtrer par structure_id
         let query = supabase
           .from("educateurs")
           .select("*");
-
-        // If not a super_admin, filter by structure_id
-        if (currentUser.role !== "super_admin" && currentUser.structure_id) {
-          query = query.eq("structure_id", currentUser.structure_id);
-        }
 
         const { data, error } = await query.order("nom");
 

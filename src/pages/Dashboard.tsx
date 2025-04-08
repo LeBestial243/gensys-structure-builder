@@ -47,32 +47,23 @@ const Dashboard = () => {
 
   // Récupérer les statistiques du dashboard
   const { data: stats } = useQuery<DashboardStats>({
-    queryKey: ["dashboard-stats", currentUser?.structure_id],
-    queryFn: () => 
-      currentUser?.structure_id 
-        ? DashboardService.getStats(currentUser.structure_id)
-        : Promise.resolve({ nombreJeunes: 0, nombreNotes: 0, nombreAlertes: 0 }),
-    enabled: !!currentUser?.structure_id,
+    queryKey: ["dashboard-stats"],
+    queryFn: () => DashboardService.getStats(),
+    enabled: true,
   });
 
   // Récupérer les événements à venir
   const { data: evenements = [] } = useQuery<Evenement[]>({
-    queryKey: ["evenements", currentUser?.structure_id],
-    queryFn: () => 
-      currentUser?.structure_id 
-        ? DashboardService.getEvenements(currentUser.structure_id, 7)
-        : Promise.resolve([]),
-    enabled: !!currentUser?.structure_id,
+    queryKey: ["evenements"],
+    queryFn: () => DashboardService.getEvenements(7),
+    enabled: true,
   });
 
   // Récupérer les alertes
   const { data: alertes = [] } = useQuery<Alerte[]>({
-    queryKey: ["alertes", currentUser?.structure_id],
-    queryFn: () => 
-      currentUser?.structure_id 
-        ? DashboardService.getAlertes(currentUser.structure_id)
-        : Promise.resolve([]),
-    enabled: !!currentUser?.structure_id,
+    queryKey: ["alertes"],
+    queryFn: () => DashboardService.getAlertes(),
+    enabled: true,
   });
 
   // Récupérer les événements pour la date sélectionnée
